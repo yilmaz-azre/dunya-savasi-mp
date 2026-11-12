@@ -461,7 +461,7 @@ function handle(m) {
 
   if (m.t === 'msg') {
     flash(m.text, m.bad);
-    if (mode === 'campPlace' && !m.bad && /Kamp kuruldu|Kamp taşındı/.test(m.text)) {
+    if (!m.bad && /Kamp kuruldu|Kamp taşındı/.test(m.text)) {
       disarmPlace();
       tabs();
     }
@@ -897,14 +897,19 @@ function tabs() {
   if (tab === 'camp') {
     const L = me.lv;
     const camp = S.b.find((b) => b[2] === me.team && b[1] === 'camp' && !(b[6] > 0));
-    add('⭐ Kamp Sv ' + L + ' • ' + SN[stageOf(L)], 'Sv 10 asker/komutan • 15 gemi • 30 tank • 100 nükleer', () => {});
     if (camp) {
+      add('⭐ Kamp Sv ' + L + ' • ' + SN[stageOf(L)], 'Sv 10 asker/komutan • 15 gemi • 30 tank • 100 nükleer', () => {});
       add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => cmd({ a: 'camp' }));
       add('🚚 Kampı Taşı', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
         armPlace('campPlace', 'Kampı taşımak için haritada boş bir kareye dokun');
       }, mode === 'campPlace');
     } else {
-      add('🏕️ Kamp Kur', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
+      add('⛔ Kamp yok', 'Kaybettin — hemen ücretsiz kur', () => {});
+      add('🏕️ Kamp Kur (hemen)', 'Ücretsiz • en yakın boş araziye kurulur', () => {
+        cmd({ a: 'campPlace' });
+        flash('Kamp kuruluyor…', false);
+      });
+      add('📍 Yer seçerek kur', 'Haritada boş kare seç', () => {
         armPlace('campPlace', 'Kamp kurmak için haritada boş bir kareye dokun');
       }, mode === 'campPlace');
     }

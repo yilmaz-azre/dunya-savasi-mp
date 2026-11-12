@@ -638,34 +638,48 @@ function doCmd(R, p, m) {
   }
 
   if (m.a === 'campPlace') {
-    let x = m.x | 0, y = m.y | 0;
     const camp = R.campOf(p.team);
     const now = Date.now();
-    const cost = { wood: 40, stone: 20, para: 25 };
     const free = (tx, ty) => isL(tx, ty) && !R.bldAt(tx, ty) && !R.nodeAt(tx, ty);
-    if (!free(x, y)) {
-      let best = null, bd = 1e9;
-      for (let r = 1; r <= 3 && !best; r++) {
+    const near = (ax, ay, maxR) => {
+      if (free(ax, ay)) return { x: ax, y: ay };
+      for (let r = 1; r <= maxR; r++) {
+        let best = null, bd = 1e9;
         for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
           if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-          const nx = x + dx, ny = y + dy;
+          const nx = ax + dx, ny = ay + dy;
           if (!free(nx, ny)) continue;
           const d = dx * dx + dy * dy;
           if (d < bd) { bd = d; best = { x: nx, y: ny }; }
         }
+        if (best) return best;
       }
-      if (!best) return flash(p, 'Buraya kurulamaz, boş bir kara karesi seç');
-      x = best.x; y = best.y;
+      return null;
+    };
+    let spot;
+    if (Number.isFinite(m.x) && Number.isFinite(m.y)) {
+      spot = near(m.x | 0, m.y | 0, 3);
+    } else {
+      const own = R.units.filter((u) => u.team === p.team).concat(R.blds.filter((b) => b.team === p.team));
+      const ax = own.length ? Math.round(own.reduce((s, u) => s + u.x, 0) / own.length) : W >> 1;
+      const ay = own.length ? Math.round(own.reduce((s, u) => s + u.y, 0) / own.length) : H >> 1;
+      spot = near(ax, ay, 14);
     }
-    if (camp && now - (p.campAt || 0) < 60000) return flash(p, 'Kampı dakikada bir taşıyabilirsin');
-    if (!R.can(p, cost)) return flash(p, 'Kaynak yetersiz (🌲40 🪨20 💰25)');
-    R.pay(p, cost);
+    if (!spot) return flash(p, 'Kamp için boş kara bulunamadı');
     if (camp) {
-      camp.x = x; camp.y = y; camp.hp = camp.mh;
+      if (now - (p.campAt || 0) < 60000) {
+        const left = Math.ceil((60000 - (now - (p.campAt || 0))) / 1000);
+        return flash(p, 'Kampı ' + left + ' sn sonra taşıyabilirsin');
+      }
+      const cost = { wood: 40, stone: 20, para: 25 };
+      if (!R.can(p, cost)) return flash(p, 'Kaynak yetersiz (🌲40 🪨20 💰25)');
+      R.pay(p, cost);
+      camp.x = spot.x; camp.y = spot.y; camp.hp = camp.mh;
       p.campAt = now;
       return flash(p, 'Kamp taşındı', false);
     }
-    R.addB('camp', p.team, x, y);
+    R.addB('camp', p.team, spot.x, spot.y);
+    p.campAt = now;
     return flash(p, 'Kamp kuruldu', false);
   }
 
