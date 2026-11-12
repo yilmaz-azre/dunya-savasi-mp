@@ -638,13 +638,25 @@ function doCmd(R, p, m) {
   }
 
   if (m.a === 'campPlace') {
-    const x = m.x | 0, y = m.y | 0;
+    let x = m.x | 0, y = m.y | 0;
     const camp = R.campOf(p.team);
     const now = Date.now();
     const cost = { wood: 40, stone: 20, para: 25 };
-    if (!isL(x, y)) return flash(p, 'Karaya kur');
-    if (R.bldAt(x, y)) return flash(p, 'Burası dolu');
-    if (R.nodeAt(x, y)) return flash(p, 'Kaynak dolu, başka kare seç');
+    const free = (tx, ty) => isL(tx, ty) && !R.bldAt(tx, ty) && !R.nodeAt(tx, ty);
+    if (!free(x, y)) {
+      let best = null, bd = 1e9;
+      for (let r = 1; r <= 3 && !best; r++) {
+        for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const nx = x + dx, ny = y + dy;
+          if (!free(nx, ny)) continue;
+          const d = dx * dx + dy * dy;
+          if (d < bd) { bd = d; best = { x: nx, y: ny }; }
+        }
+      }
+      if (!best) return flash(p, 'Buraya kurulamaz, boş bir kara karesi seç');
+      x = best.x; y = best.y;
+    }
     if (camp && now - (p.campAt || 0) < 60000) return flash(p, 'Kampı dakikada bir taşıyabilirsin');
     if (!R.can(p, cost)) return flash(p, 'Kaynak yetersiz (🌲40 🪨20 💰25)');
     R.pay(p, cost);

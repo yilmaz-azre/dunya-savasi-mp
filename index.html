@@ -459,7 +459,14 @@ function handle(m) {
     return;
   }
 
-  if (m.t === 'msg') return flash(m.text, m.bad);
+  if (m.t === 'msg') {
+    flash(m.text, m.bad);
+    if (mode === 'campPlace' && !m.bad && /Kamp kuruldu|Kamp taşındı/.test(m.text)) {
+      disarmPlace();
+      tabs();
+    }
+    return;
+  }
   if (m.t === 'chat') return addChatMsg(m.m);
   if (m.t === 'ev') {
     flash(m.text, m.bad);
@@ -809,6 +816,22 @@ const ct = (c) => Object.entries(c).map(([k, v]) => I[k] + v).join(' ');
 const affordable = (c) => me && Object.keys(c).every((k) => me.res[k] >= c[k]);
 const hasB = (type) => !!(S && S.b.some((b) => b[2] === me.team && b[1] === type && !(b[6] > 0)));
 
+let placeChatOpen = false;
+function armPlace(m, hint) {
+  placeChatOpen = chatOn;
+  if (chatOn) setChat(false);
+  mode = m;
+  cv.style.cursor = 'crosshair';
+  flash(hint, false);
+}
+function disarmPlace() {
+  const back = placeChatOpen && innerWidth >= 900 && started;
+  placeChatOpen = false;
+  mode = null;
+  cv.style.cursor = '';
+  if (back) setChat(true);
+}
+
 function tabs() {
   const T2 = { build: '🏗️ İnşa', unit: '🪖 Birlik', task: '⛏️ Görev', nuke: '☢️ Nükleer', eco: '💰 Pazar', camp: '🏕️ Kamp', room: '👥 Oda' };
   const tb = $('tabs');
@@ -837,8 +860,7 @@ function tabs() {
       const lock = (LV[k] || 0) > me.lv;
       add(BI[k] + ' ' + BN[k], ct(BC[k]) + (lock ? ' 🔒Sv' + LV[k] : ''), () => {
         if (lock) return flash('Seviye ' + LV[k] + ' gerekli', true);
-        mode = { b: k };
-        flash(BN[k] + ' için haritaya dokun', false);
+        armPlace({ b: k }, BN[k] + ' için haritaya dokun');
       }, mode && mode.b === k);
     }
   }
@@ -861,8 +883,7 @@ function tabs() {
   if (tab === 'nuke') {
     add('☢️ Füze Fırlat', hasB('silo') && hasB('plant') ? '☢️20 uranyum' : 'rampa + santral gerekli', () => {
       if (!hasB('silo') || !hasB('plant')) return flash('Rampa ve santral gerekli', true);
-      mode = 'nuke';
-      flash('Hedefe dokun', false);
+      armPlace('nuke', 'Hedefe dokun');
     }, mode === 'nuke');
   }
 
@@ -880,13 +901,11 @@ function tabs() {
     if (camp) {
       add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => cmd({ a: 'camp' }));
       add('🚚 Kampı Taşı', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
-        mode = 'campPlace';
-        flash('Kampı taşımak için haritada boş bir kareye dokun', false);
+        armPlace('campPlace', 'Kampı taşımak için haritada boş bir kareye dokun');
       }, mode === 'campPlace');
     } else {
       add('🏕️ Kamp Kur', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
-        mode = 'campPlace';
-        flash('Kamp kurmak için haritada boş bir kareye dokun', false);
+        armPlace('campPlace', 'Kamp kurmak için haritada boş bir kareye dokun');
       }, mode === 'campPlace');
     }
   }
@@ -901,6 +920,7 @@ function tabs() {
     add('🚪 Odadan Ayrıl', 'Lobiyе döner', () => send({ t: 'leave' }));
     if (S.over) add('🔄 Yeniden Oyna', 'Yeni savaş', () => cmd({ a: 'restart' }));
   }
+  cv.style.cursor = mode ? 'crosshair' : '';
 }
 
 /* ---------- kontroller ---------- */
@@ -912,7 +932,7 @@ cv.onpointerdown = (e) => {
 cv.onpointermove = (e) => {
   if (!pd) return;
   const dx = e.clientX - pd.x, dy = e.clientY - pd.y;
-  if (Math.hypot(dx, dy) > 8) pd.m = 1;
+  if (Math.hypot(dx, dy) > (mode ? 22 : 8)) pd.m = 1;
   if (pd.m) { cam.x = pd.cx - dx / cam.z; cam.y = pd.cy - dy / cam.z; }
 };
 cv.onpointerup = (e) => {
@@ -926,19 +946,18 @@ function tap(px, py) {
   const x = px / T | 0, y = py / T | 0;
   if (mode === 'nuke') {
     cmd({ a: 'nuke', x, y });
-    mode = null;
+    disarmPlace();
     tabs();
     return;
   }
   if (mode === 'campPlace') {
     cmd({ a: 'campPlace', x, y });
-    mode = null;
-    tabs();
+    flash('Kamp yeri gönderildi…', false);
     return;
   }
   if (mode && mode.b) {
     cmd({ a: 'build', k: mode.b, x, y });
-    mode = null;
+    disarmPlace();
     tabs();
   }
 }
@@ -966,7 +985,10 @@ addEventListener('keydown', (e) => {
   const tag = (e.target && e.target.tagName) || '';
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
   if (e.key === 'Enter' && started) { e.preventDefault(); setChat(true, true); }
-  else if (e.key === 'Escape' && chatOn) setChat(false);
+  else if (e.key === 'Escape') {
+    if (chatOn) setChat(false);
+    if (mode) { disarmPlace(); tabs(); }
+  }
 });
 addEventListener('pointerdown', unlockAudio, { once: true });
 paintBadge();
