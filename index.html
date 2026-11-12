@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Dünya Savaşı — Çok Oyunculu</title>
+<script>window.__yyPill=false;</script>
+<script>/* YY Studios profil koprusu */(function(){try{var q=new URLSearchParams(location.search),n=q.get("name"),av=q.get("av"),cr=q.get("crown");if(n){n=n.trim().replace(/\s+/g," ").slice(0,18);["bt_nm","cas_name","ulke_name"].forEach(function(k){try{localStorage.setItem(k,n)}catch(e){}});try{var pr=JSON.parse(localStorage.getItem("ds_mp_profile")||"{}");pr.name=n;localStorage.setItem("ds_mp_profile",JSON.stringify(pr))}catch(e){}}if(av&&/^data:image\//.test(av)){try{localStorage.setItem("yy_av",av)}catch(e){}}if(cr==="1"){try{localStorage.setItem("yy_crown","1")}catch(e){}}}catch(e){}})();</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0b3a5c;font-family:system-ui,sans-serif;color:#e8ecf4;user-select:none;touch-action:none}
+canvas#c{position:fixed;inset:0}
+#top{position:fixed;top:0;left:0;right:0;display:flex;flex-wrap:wrap;gap:8px;padding:8px;background:linear-gradient(#000a,#0000);font-size:15px;font-weight:700;z-index:5;pointer-events:none}
+#top span{background:#0d1117;border:1px solid #2a3446;border-radius:12px;padding:8px 12px}
+#top .nm{color:#fff}#top .nm i{width:12px;height:12px;border-radius:50%;background:#3b82f6;display:inline-block;margin-right:7px}
+.wood{color:#e0a43a}.fish{color:#6cc4ff}.stone{color:#cfd6e4}.iron{color:#f0a030}.coal{color:#aab}.gold{color:#fcd34d}.uran{color:#86efac}.wheat{color:#e8c85a}
+#msg{position:fixed;top:110px;left:50%;transform:translateX(-50%);background:#0d9488;padding:7px 14px;border-radius:18px;font-size:13px;font-weight:700;z-index:6;max-width:92vw;text-align:center;display:none}
+#msg.bad{background:#991b1b}
+#panel{position:fixed;left:8px;right:8px;bottom:8px;background:rgba(13,17,23,.93);border:1px solid #2a3446;border-radius:16px;z-index:5;max-height:42vh;display:none;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+#tabs{display:flex;gap:4px;padding:5px;overflow-x:auto}
+#items{display:flex;flex-wrap:wrap;gap:5px;padding:0 5px 6px;overflow-y:auto}
+button{border:0;border-radius:9px;background:#1f2a3d;border:1px solid #2a3446;color:#e8ecf4;font-weight:700;font-size:12px;padding:9px 10px;min-height:40px}
+button.on{background:#0d9488;border-color:#0d9488}
+#items button small{display:block;font-weight:500;color:#9fb0c9;font-size:10px}
+#zoom{position:fixed;right:8px;top:120px;display:none;flex-direction:column;gap:5px;z-index:5}
+#zoom button{width:40px;padding:0;font-size:20px}
+#mm{position:fixed;right:8px;bottom:200px;width:160px;height:80px;border:2px solid #2a3446;border-radius:12px;z-index:5;background:#2563eb;display:none}
+#lobby{position:fixed;inset:0;background:radial-gradient(circle at 30% 0%,#10243a,#070b12 70%);z-index:20;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.card{background:#1a2133;border:1px solid #2a3446;border-radius:22px;padding:24px;width:100%;max-width:460px;max-height:94vh;overflow-y:auto}
+.card h1{font-size:32px}.card h1 b{color:#5eead4}.card h2{font-size:22px;margin-bottom:6px}
+.card p{color:#9fb0c9;font-size:13px;margin:8px 0 14px;line-height:1.5}
+.card label{font-size:12px;color:#9fb0c9;font-weight:700;display:block;margin-top:8px}
+.card input{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3446;background:#0d1117;color:#fff;font-size:15px;margin:5px 0 4px;user-select:text}
+.card button{padding:12px 16px}
+.card .go{background:#0d9488;border-color:#0d9488;width:100%;font-size:15px;margin-top:10px}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row>div{flex:1}
+.row button{flex:0 0 auto;min-height:45px}
+.code{font:800 34px/1 ui-monospace,Consolas,monospace;letter-spacing:8px;color:#5eead4;background:#0d1117;border:1px dashed #2a3446;border-radius:14px;padding:16px;text-align:center;margin:8px 0 14px}
+.plist{display:flex;flex-direction:column;gap:6px;margin:8px 0 14px}
+.pl{display:flex;align-items:center;gap:9px;background:#0d1117;border:1px solid #223;border-radius:12px;padding:10px 12px;font-size:14px}
+.pl i{width:12px;height:12px;border-radius:50%;flex:0 0 auto}
+.pl small{margin-left:auto;color:#8fa2bd;font-weight:600}
+.rl{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:38vh;overflow-y:auto}
+.rl button{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:#0d1117;border-color:#223}
+.rl b{color:#5eead4}
+hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
+.hint{color:#7f8ea6;font-size:12px;line-height:1.5;margin-top:10px}
+#over{position:fixed;inset:0;background:#000b;z-index:15;display:flex;align-items:center;justify-content:center;padding:16px}
+#over .oc{background:#1a2133;border:1px solid #2a3446;border-radius:20px;padding:24px;text-align:center;max-width:380px;width:100%}
+#over h2{font-size:26px;margin-bottom:6px}#over p{color:#9fb0c9;font-size:14px;margin-bottom:16px}
+#over button{margin:4px;background:#0d9488;border-color:#0d9488}
+#over button.alt{background:#2c3a52;border-color:#2a3446}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="top"></div>
+<div id="msg"></div>
+<canvas id="mm" width="160" height="80"></canvas>
+<div id="zoom"><button id="hp">☰</button><button id="zi">+</button><button id="zo">−</button></div>
+<div id="panel"><div id="tabs"></div><div id="items"></div></div>
+
+<div id="over" hidden><div class="oc">
+  <h2 id="ovt"></h2><p id="ovp"></p>
+  <button id="ovRestart">Yeniden Oyna</button>
+  <button id="ovWatch" class="alt">İzlemeye Devam</button>
+</div></div>
+
+<div id="lobby">
+  <div class="card" id="scrMenu">
+    <h1>DÜNYA <b>SAVAŞI</b></h1>
+    <p>Çok oyunculu • kalıcı odalar • oda kodu ile katıl</p>
+    <label>Oyuncu adı</label><input id="pn" maxlength="16" placeholder="Adın">
+    <label>Ülke adı</label><input id="cn" maxlength="20" placeholder="Ülkenin adı">
+    <label>Ülke rengi</label><input id="cc" type="color" value="#2dd4bf" style="height:46px;padding:4px">
+    <hr>
+    <label>Yeni oda</label>
+    <input id="rn" maxlength="28" placeholder="Oda adı">
+    <div class="row">
+      <div><label>Maks oyuncu</label><input id="rm" type="number" min="2" max="8" value="4"></div>
+      <div><label>AI düşman</label><input id="ra" type="number" min="0" max="3" value="2"></div>
+    </div>
+    <button id="create" class="go">Oda Aç</button>
+    <hr>
+    <label>Oda kodu ile katıl</label>
+    <div class="row"><input id="jc" maxlength="4" placeholder="Örn. K7QP"><button id="joinCode">Katıl</button></div>
+    <div class="rl" id="roomList"></div>
+    <div class="hint" id="lhint"></div>
+  </div>
+
+  <div class="card" id="scrRoom" hidden>
+    <h2 id="rname">Oda</h2>
+    <div class="code" id="rcode">----</div>
+    <div id="rinfo" class="hint"></div>
+    <div class="plist" id="rplayers"></div>
+    <button id="start" class="go">Savaşı Başlat</button>
+    <button id="leave" class="go" style="background:#2c3a52;border-color:#2a3446">Odadan Ayrıl</button>
+    <p class="hint">Oda kodu ile arkadaşların katılabilir. Odayı kuran çıksa bile oda açık kalır; kodu bilen herkes girebilir.</p>
+  </div>
+
+  <div class="card" id="scrConn" hidden>
+    <h2>Bağlantı yok</h2>
+    <p id="connText">Sunucuya ulaşılamadı.</p>
+    <button id="reload" class="go">Yeniden Dene</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ---------- harita ---------- */
+const $ = (i) => document.getElementById(i);
+function yyPic() { try { return localStorage.getItem('yy_av') || ''; } catch (e) { return ''; } }
+function yyName() {
+  try { return localStorage.getItem('cas_name') || localStorage.getItem('ulke_name') || localStorage.getItem('bt_nm') || ''; }
+  catch (e) { return ''; }
+}
+function yyCrown() { try { return localStorage.getItem('yy_crown') === '1'; } catch (e) { return false; } }
+function yyAva() {
+  const pic = yyPic(), nm = yyName();
+  if (pic) return '<img src="' + pic + '" alt="" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid #0b0d08;flex:0 0 auto">';
+  if (!nm) return '';
+  return '<span style="width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;background:#2a2f27;color:#f2c230;font-size:10px;flex:0 0 auto">' +
+    nm.charAt(0).toLocaleUpperCase('tr-TR') + '</span>';
+}
+const W = 240, H = 120, T = 14, cv = $('c'), cx = cv.getContext('2d');
+const P = {
+  na: [[-168,66],[-140,70],[-95,72],[-80,70],[-62,58],[-53,47],[-70,43],[-76,35],[-80,25],[-90,29],[-97,26],[-97,18],[-88,16],[-83,9],[-78,8],[-86,13],[-105,20],[-117,32],[-124,40],[-124,48],[-135,58],[-150,60],[-165,60]],
+  sa: [[-78,8],[-60,11],[-50,0],[-35,-6],[-40,-22],[-48,-28],[-58,-38],[-65,-42],[-68,-52],[-72,-52],[-73,-40],[-71,-18],[-81,-5],[-80,0]],
+  eu: [[-10,36],[-9,43],[-2,47],[-5,48],[5,52],[8,55],[10,58],[5,62],[15,69],[30,71],[60,70],[80,73],[110,77],[140,72],[170,70],[180,66],[160,60],[155,52],[140,52],[135,43],[127,39],[122,40],[121,31],[110,21],[106,10],[100,13],[100,2],[104,1],[98,8],[92,22],[80,14],[77,8],[73,18],[67,25],[57,25],[56,27],[50,30],[48,29],[56,17],[43,13],[35,28],[33,31],[27,37],[36,36],[26,40],[24,38],[20,40],[18,40],[13,45],[16,38],[9,44],[3,43],[-5,36]],
+  af: [[-17,21],[-10,35],[10,37],[32,31],[35,28],[43,12],[51,12],[40,-3],[40,-15],[35,-24],[27,-34],[18,-34],[12,-17],[9,0],[-8,4],[-17,14]],
+  au: [[114,-22],[130,-12],[142,-11],[153,-26],[148,-38],[135,-35],[115,-34]],
+  gr: [[-55,60],[-20,70],[-20,82],[-60,82],[-70,76]],
+  uk: [[-5,50],[2,52],[-2,58],[-6,56]],
+  jp: [[130,32],[140,36],[142,44],[140,41],[132,34]],
+  mg: [[44,-25],[50,-15],[47,-13],[43,-20]]
+};
+const pip = (px, py, poly) => {
+  let c = 0;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [a, b] = poly[i], [d, e] = poly[j];
+    if ((b > py) !== (e > py) && px < (d - a) * (py - b) / (e - b) + a) c = !c;
+  }
+  return c;
+};
+const land = new Uint8Array(W * H);
+for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+  const lo = -180 + (x + .5) * 1.5, la = 90 - (y + .5) * 1.5;
+  for (const k in P) if (pip(lo, la, P[k])) { land[y * W + x] = 1; break; }
+}
+const isL = (x, y) => x >= 0 && y >= 0 && x < W && y < H && land[(y | 0) * W + (x | 0)] === 1;
+
+const bg = document.createElement('canvas');
+bg.width = W * T; bg.height = H * T;
+{
+  const g = bg.getContext('2d');
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const ck = (x + y) & 1;
+    if (land[y * W + x]) {
+      const lat = Math.abs(90 - (y + .5) * 1.5);
+      g.fillStyle = lat > 62 ? (ck ? '#e6eef2' : '#dbe6ec') : (ck ? '#2f9140' : '#35993f');
+      g.fillRect(x * T, y * T, T, T);
+      if (lat <= 62) {
+        g.fillStyle = 'rgba(0,70,20,.35)';
+        if ((x * 31 + y * 17) % 5 === 0) { g.fillRect(x * T + 3, y * T + 5, 1.5, 3); g.fillRect(x * T + 8, y * T + 9, 1.5, 3); }
+        g.fillStyle = '#f5e663';
+        if ((x * 13 + y * 7) % 11 === 0) g.fillRect(x * T + 10, y * T + 3, 2, 2);
+        g.fillStyle = '#d9c27a';
+        if (!isL(x, y - 1)) g.fillRect(x * T, y * T, T, 2);
+        if (!isL(x, y + 1)) g.fillRect(x * T, y * T + T - 2, T, 2);
+        if (!isL(x - 1, y)) g.fillRect(x * T, y * T, 2, T);
+        if (!isL(x + 1, y)) g.fillRect(x * T + T - 2, y * T, 2, T);
+      }
+    } else {
+      g.fillStyle = ck ? '#2563eb' : '#2868f0';
+      g.fillRect(x * T, y * T, T, T);
+    }
+  }
+}
+
+/* ---------- sabitler ---------- */
+const I = { wood: '🌲', fish: '🐟', stone: '🪨', iron: '🔩', coal: '⚫', gold: '🟡', uran: '☢️', wheat: '🌾' };
+const N = { wood: 'Odun', fish: 'Balık', stone: 'Taş', iron: 'Demir', coal: 'Kömür', gold: 'Altın', uran: 'Uranyum', para: 'Para', wheat: 'Buğday' };
+const BI = { camp: '🔥', house: '🏠', barracks: '⚔️', tower: '🗼', wall: '🧱', bunker: '🛡️', cannon: '💣', port: '⚓', plant: '⚛️', silo: '🚀', farm: '🌾', goldmine: '⛏️', smith: '⚒️' };
+const UI = { worker: '👷', soldier: '🪖', tank: '🚜', cmd: '🎖️', ship: '🚢' };
+const BN = {
+  house: 'Ev (+3 nüfus)', barracks: 'Asker Kampı', tower: 'Gözcü Kulesi', wall: 'Sur', bunker: 'Sığınak',
+  cannon: 'Top Bataryası', port: 'Liman', plant: 'Nükleer Santral', silo: 'Nükleer Rampa',
+  farm: 'Çiftlik (buğday)', goldmine: 'Altın Madeni', smith: 'Demirci (2 demir+1 kömür → 4 altın)'
+};
+const BC = {
+  house: { wood: 25, stone: 15 }, barracks: { wood: 30, stone: 20 }, tower: { wood: 20, stone: 20 },
+  wall: { stone: 5 }, bunker: { stone: 40, iron: 15 }, cannon: { iron: 30, coal: 10 },
+  port: { wood: 40, stone: 30 }, plant: { iron: 40, stone: 40, coal: 20 }, silo: { iron: 60, stone: 50, uran: 10 },
+  farm: { wood: 30, stone: 10 }, goldmine: { wood: 40, stone: 40 }, smith: { stone: 30, iron: 15 }
+};
+const US = {
+  worker: { hp: 30, n: 'İşçi', c: { fish: 10 }, at: 'camp' },
+  soldier: { hp: 60, n: 'Asker', c: { fish: 10, wood: 5 }, at: 'barracks' },
+  tank: { hp: 200, n: 'Tank', c: { iron: 20, coal: 10 }, at: 'barracks' },
+  cmd: { hp: 130, n: 'Komutan', c: { gold: 30, fish: 20 }, at: 'barracks' },
+  ship: { hp: 150, n: 'Savaş Gemisi', c: { iron: 25, wood: 20 }, at: 'port' }
+};
+const LV = { soldier: 10, cmd: 10, tank: 30, ship: 15, plant: 100, silo: 100 };
+const PR = { wood: 1, fish: 1, wheat: 1, stone: 1.5, iron: 3, coal: 2, gold: 4, uran: 15 };
+const TC = ['#2dd4bf', '#ef4444', '#f59e0b', '#a78bfa', '#38bdf8', '#f472b6', '#a3e635', '#fb923c'];
+const SN = ['Köy', 'Kasaba', 'Şehir', 'Büyük Şehir', 'Metropol'];
+const BM = { camp: '🌃', house: '🏢', barracks: '🏭', tower: '📡', wall: '🧱', bunker: '🏛️', cannon: '🎯', port: '🏗️', plant: '⚛️', silo: '🚀', farm: '🚜' };
+const stageOf = (lv) => (lv >= 100 ? 4 : lv >= 50 ? 3 : lv >= 25 ? 2 : lv >= 10 ? 1 : 0);
+
+/* ---------- durum ---------- */
+let ws = null, myId = null, me = null, S = null, roomInfo = null, started = false;
+let nodes = new Map(), rend = new Map(), mode = null, tab = 'build', overSeen = false;
+const cam = { x: W * T / 2, y: H * T / 2.1, z: 1.15 };
+const teamMeta = new Map(); /* team -> {col, name, lv} */
+
+const teamColor = (team) => {
+  if (team === 9) return '#444';
+  const m = teamMeta.get(team);
+  return m ? m.col : '#888';
+};
+const teamStage = (team) => {
+  const m = teamMeta.get(team);
+  return m ? stageOf(m.lv || 1) : 1;
+};
+const myPlant = () => !!(S && S.b.some((b) => b[2] === me.team && b[1] === 'plant'));
+
+/* ---------- ağ ---------- */
+function conn() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host);
+  ws.onopen = () => {
+    $('lobby').style.display = '';
+    $('lhint').textContent = '';
+  };
+  ws.onclose = () => {
+    $('scrMenu').hidden = true;
+    $('scrRoom').hidden = true;
+    $('scrConn').hidden = false;
+    $('connText').textContent = 'Sunucu bağlantısı koptu.';
+  };
+  ws.onerror = () => {};
+  ws.onmessage = (e) => {
+    let m;
+    try { m = JSON.parse(e.data); } catch (err) { return; }
+    handle(m);
+  };
+}
+const send = (o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
+const cmd = (o) => send(Object.assign({ t: 'cmd' }, o));
+
+function flash(text, bad) {
+  const el = $('msg');
+  el.textContent = text;
+  el.className = bad ? 'bad' : '';
+  el.style.display = 'block';
+  clearTimeout(flash.t);
+  flash.t = setTimeout(() => { el.style.display = 'none'; }, 2400);
+}
+
+function lerr(text) {
+  $('lhint').textContent = text;
+  flash(text, true);
+}
+
+function handle(m) {
+  if (m.t === 'rooms') return renderRooms(m.list);
+  if (m.t === 'err') return lerr(m.text);
+
+  if (m.t === 'joined') {
+    myId = m.me.id;
+    roomInfo = m.room;
+    started = !!m.started;
+    overSeen = false;
+    if (started && m.state) {
+      applySnap(m.state);
+      nodes = new Map((m.nodes || []).map((n) => [n[0], { id: n[0], x: n[1], y: n[2], t: n[3] }]));
+      enterGame();
+    } else {
+      showLobby('room');
+      renderRoom();
+    }
+    return;
+  }
+
+  if (m.t === 'room') {
+    roomInfo = m.room;
+    renderRoom();
+    if (!roomInfo.started && started) { /* oyun sıfırlandı */ }
+    return;
+  }
+
+  if (m.t === 'start') { started = true; enterGame(); return; }
+
+  if (m.t === 's') {
+    const first = !started;
+    if (first) started = true;
+    applySnap(m);
+    if (first) enterGame();
+    return;
+  }
+
+  if (m.t === 'nd') {
+    for (const n of m.a) nodes.set(n[0], { id: n[0], x: n[1], y: n[2], t: n[3] });
+    for (const id of m.d) nodes.delete(id);
+    return;
+  }
+
+  if (m.t === 'msg') return flash(m.text, m.bad);
+  if (m.t === 'ev') {
+    flash(m.text, m.bad);
+    if (started && !overSeen) $('msg').style.display = 'block';
+    return;
+  }
+
+  if (m.t === 'left') {
+    roomInfo = null; started = false; S = null; me = null;
+    nodes.clear(); rend.clear();
+    $('over').hidden = true;
+    $('panel').style.display = 'none';
+    $('top').innerHTML = '';
+    $('mm').style.display = 'none';
+    $('zoom').style.display = 'none';
+    showLobby('menu');
+    return;
+  }
+
+  if (m.t === 'reset') {
+    started = false; S = null; mode = null; overSeen = false;
+    $('over').hidden = true;
+    $('panel').style.display = 'none';
+    $('mm').style.display = 'none';
+    $('zoom').style.display = 'none';
+    $('top').innerHTML = '';
+    nodes.clear(); rend.clear();
+    showLobby('room');
+    return;
+  }
+}
+
+/* ---------- lobi ---------- */
+function showLobby(which) {
+  $('lobby').style.display = '';
+  $('lobby').hidden = false;
+  $('scrMenu').hidden = which !== 'menu';
+  $('scrRoom').hidden = which !== 'room';
+  $('scrConn').hidden = which !== 'conn';
+  if (which === 'room') renderRoom();
+}
+
+function renderRooms(list) {
+  const box = $('roomList');
+  if (!box) return;
+  if (!list.length) { box.innerHTML = '<div class="hint">Açık oda yok — ilk odayı sen aç.</div>'; return; }
+  box.innerHTML = '';
+  for (const r of list) {
+    const b = document.createElement('button');
+    b.innerHTML = '<span><b>' + r.code + '</b> ' + r.name + '</span><span>' + r.players + '/' + r.max + (r.started ? ' • oyunda' : '') + '</span>';
+    b.onclick = () => joinRoom(r.code);
+    box.appendChild(b);
+  }
+}
+
+function renderRoom() {
+  if (!roomInfo) return;
+  $('rname').textContent = roomInfo.name;
+  $('rcode').textContent = roomInfo.code;
+  $('rinfo').textContent = 'Maks ' + roomInfo.max + ' oyuncu • ' + roomInfo.ai + ' AI düşman • ' + (roomInfo.started ? 'oyun sürüyor' : 'başlamayı bekliyor');
+  const box = $('rplayers');
+  box.innerHTML = '';
+  for (const p of roomInfo.players) {
+    const d = document.createElement('div');
+    d.className = 'pl';
+    d.innerHTML = '<i style="background:' + p.col + '"></i>' + p.c + ' <small>' + (p.n || '') + (p.on ? '' : ' • çevrimdışı') + '</small>';
+    box.appendChild(d);
+  }
+  $('start').style.display = roomInfo.started ? 'none' : '';
+}
+
+/* ---------- oyuna geç ---------- */
+function enterGame() {
+  $('lobby').hidden = true;
+  $('lobby').style.display = 'none';
+  $('over').hidden = true;
+  $('panel').style.display = 'flex';
+  $('mm').style.display = 'block';
+  $('zoom').style.display = 'flex';
+  mode = null; tab = 'build';
+  const camp = (S && S.b.find((b) => b[2] === me.team && b[1] === 'camp'));
+  if (camp) { cam.x = (camp[4] + .5) * T; cam.y = (camp[5] + .5) * T; }
+  tabs();
+  draw();
+}
+
+/* ---------- anlık görüntü ---------- */
+function applySnap(s) {
+  S = s;
+  me = s.me;
+  teamMeta.clear();
+  for (const p of s.p) teamMeta.set(p.i, { col: p.col, name: p.c, lv: p.lv });
+  for (const a of s.a) teamMeta.set(a.i, { col: a.col, name: a.n, lv: 1 });
+
+  const seen = new Set();
+  for (const u of s.u) {
+    const id = u[0];
+    seen.add(id);
+    let r = rend.get(id);
+    const tx = u[4] * T, ty = u[5] * T;
+    if (!r) { r = { x: tx, y: ty, tx, ty }; rend.set(id, r); }
+    r.tx = tx; r.ty = ty;
+  }
+  for (const id of rend.keys()) if (!seen.has(id)) rend.delete(id);
+
+  if (s.over && !overSeen && started) {
+    overSeen = true;
+    $('ovt').textContent = s.win ? '🏆 ' + s.win + ' kazandı' : 'Savaş bitti';
+    $('ovp').textContent = s.me.alive ? 'Sağ kalan son ülkesin.' : 'Ülken elendi. İzlemeye devam edebilirsin.';
+    $('ovRestart').style.display = '';
+    $('over').hidden = false;
+  }
+  if (!s.over) { overSeen = false; $('over').hidden = true; }
+}
+
+/* ---------- çizim araçları ---------- */
+function nodeArt(n) {
+  const x = (n.x + .5) * T, y = (n.y + .5) * T, t = n.t;
+  if (t === 'wood') {
+    cx.fillStyle = 'rgba(0,0,0,.2)'; cx.beginPath(); cx.ellipse(x, y + 6, 5, 1.8, 0, 0, 6.3); cx.fill();
+    cx.fillStyle = '#7a4a1e'; cx.fillRect(x - 1, y + 3, 2, 3);
+    cx.fillStyle = '#1f6a2c'; cx.beginPath(); cx.arc(x, y, 5.2, 0, 6.3); cx.fill();
+    cx.fillStyle = '#2f8a3c'; cx.beginPath(); cx.arc(x - 1.3, y - 1.3, 2.6, 0, 6.3); cx.fill();
+  } else if (t === 'stone') {
+    cx.fillStyle = '#a8b3c8'; cx.beginPath(); cx.moveTo(x - 6, y + 4); cx.lineTo(x - 3, y - 4); cx.lineTo(x + 3, y - 4); cx.lineTo(x + 6, y + 4); cx.closePath(); cx.fill();
+    cx.fillStyle = '#d3dae8'; cx.fillRect(x - 2, y - 2.5, 3, 2);
+  } else if (t === 'wheat') {
+    cx.fillStyle = '#d9b84a';
+    for (let i = -3; i <= 3; i += 3) {
+      cx.fillRect(x + i - .5, y - 2, 1.2, 7);
+      cx.beginPath(); cx.ellipse(x + i, y - 3, 1.5, 2.6, 0, 0, 6.3); cx.fill();
+    }
+  } else if (t === 'fish') {
+    cx.fillStyle = '#bfe3ff'; cx.beginPath(); cx.ellipse(x, y, 5, 3, 0, 0, 6.3); cx.fill();
+    cx.beginPath(); cx.moveTo(x + 4, y); cx.lineTo(x + 7, y - 3); cx.lineTo(x + 7, y + 3); cx.fill();
+    cx.fillStyle = '#1e3a8a'; cx.fillRect(x - 3, y - 1, 1.2, 1.2);
+  } else {
+    const c = { iron: ['#6b4226', '#f59e0b'], coal: ['#2a2a31', '#8b8b99'], gold: ['#7a6320', '#fde047'], uran: ['#1d4d2b', '#4ade80'] }[t] || ['#6b4226', '#f59e0b'];
+    cx.fillStyle = c[0]; cx.beginPath(); cx.arc(x, y + 4, 6, Math.PI, 0); cx.fill();
+    cx.fillStyle = c[1];
+    cx.fillRect(x - 3, y + 1, 1.6, 1.6); cx.fillRect(x + 1, y, 1.6, 1.6); cx.fillRect(x - 1, y + 2.5, 1.6, 1.6);
+  }
+}
+
+function drawBld(type, team, bx, by, bt) {
+  const x = bx * T, y = by * T, s = teamStage(team), mod = s >= 4, tc = teamColor(team), t = type;
+  const R = (c, a, q, w, h) => { cx.fillStyle = c; cx.fillRect(x + a, y + q, w, h); };
+  cx.globalAlpha = bt > 0 ? .35 : 1;
+  cx.fillStyle = 'rgba(0,0,0,.25)'; cx.beginPath(); cx.ellipse(x + 7, y + 13, 7, 2, 0, 0, 6.3); cx.fill();
+
+  if (t === 'house') {
+    if (mod || s >= 2) {
+      R('#cbd5e1', 3, 2, 8, 11); R('#64748b', 3, 2, 8, 1.5);
+      for (let i = 0; i < 3; i++) { R('#fde68a', 4.5, 4 + i * 3, 2, 1.6); R('#fde68a', 8, 4 + i * 3, 2, 1.6); }
+    } else {
+      R('#d9b98c', 2, 6, 10, 7);
+      cx.fillStyle = tc; cx.beginPath(); cx.moveTo(1, 6.5); cx.lineTo(7, 1); cx.lineTo(13, 6.5); cx.fill();
+      R('#6b4423', 6, 9, 3, 4); R('#fde68a', 3, 8, 2, 2);
+    }
+  } else if (t === 'camp') {
+    if (mod) {
+      R('#475569', 1, 5, 4, 8); R('#64748b', 5, 1, 5, 12); R('#334155', 10, 4, 3, 9);
+      for (let i = 0; i < 4; i++) { R('#fde68a', 6, 2.5 + i * 2.8, 1.4, 1.4); R('#fde68a', 8, 2.5 + i * 2.8, 1.4, 1.4); }
+    } else if (s >= 1) {
+      R('#c9b38a', 1, 6, 12, 7);
+      cx.fillStyle = tc; cx.beginPath(); cx.moveTo(0, 6.5); cx.lineTo(7, 1); cx.lineTo(14, 6.5); cx.fill();
+      R('#6b4423', 5.5, 9, 3, 4); R('#fde68a', 2, 8, 2, 2); R('#fde68a', 10, 8, 2, 2);
+    } else {
+      cx.fillStyle = '#e8d9b0'; cx.beginPath(); cx.moveTo(1, 13); cx.lineTo(7, 2); cx.lineTo(13, 13); cx.fill();
+      R('#5b3a1e', 6, 8, 2, 5); R(tc, 7, 0, 3, 2); R('#ef6c1a', 11, 10, 2, 3);
+    }
+  } else if (t === 'barracks') {
+    R(mod ? '#64748b' : '#7c5a3a', 1, 5, 12, 8);
+    for (let i = 0; i < 4; i++) R(mod ? '#475569' : '#5a4029', 1 + i * 3.4, 3.5, 2, 2);
+    R(tc, 5, 8, 4, 5); R('#222', 12, 0, .8, 5); R(tc, 12.8, 0, 2.5, 2);
+  } else if (t === 'tower') {
+    R(mod ? '#475569' : '#94a3b8', 4, 4, 6, 9); R(mod ? '#334155' : '#64748b', 3, 2, 8, 3); R(tc, 6, 0, 2, 2);
+    if (mod) R('#e5e7eb', 6.7, -2, .7, 4);
+  } else if (t === 'wall') {
+    R('#8b94a5', 0, 6, 14, 6); R('#6b7280', 0, 9, 14, .7); R('#6b7280', 4, 6, .7, 3); R('#6b7280', 9, 9, .7, 3);
+  } else if (t === 'bunker') {
+    cx.fillStyle = '#6b7280'; cx.beginPath(); cx.arc(x + 7, y + 12, 6.5, Math.PI, 0); cx.fill(); R('#111', 4, 9, 6, 1.5);
+  } else if (t === 'cannon') {
+    R('#4b5563', 3, 9, 8, 4); cx.fillStyle = '#1f2937'; cx.beginPath(); cx.arc(x + 7, y + 8, 3.2, 0, 6.3); cx.fill(); R('#111', 7, 6.8, 6, 2);
+  } else if (t === 'port') {
+    R('#8b5a2b', 0, 8, 14, 5); R('#5b3a1e', 3, 8, .7, 5); R('#5b3a1e', 8, 8, .7, 5); R('#e5e7eb', 6.5, 1, .8, 7); R(tc, 7.3, 1, 4, 3);
+  } else if (t === 'plant') {
+    cx.fillStyle = '#cbd5e1';
+    cx.beginPath(); cx.moveTo(1, 13); cx.lineTo(3, 4); cx.lineTo(6, 4); cx.lineTo(8, 13); cx.fill();
+    cx.beginPath(); cx.moveTo(7, 13); cx.lineTo(9, 6); cx.lineTo(12, 6); cx.lineTo(14, 13); cx.fill();
+    R('#4ade80', 5.5, 10, 3, 3);
+    cx.fillStyle = 'rgba(255,255,255,.6)'; cx.beginPath(); cx.arc(x + 4.5, y + 2, 2.3, 0, 6.3); cx.fill();
+  } else if (t === 'silo') {
+    cx.fillStyle = '#374151'; cx.beginPath(); cx.arc(x + 7, y + 8, 6, 0, 6.3); cx.fill();
+    cx.strokeStyle = '#dc2626'; cx.lineWidth = 1; cx.beginPath(); cx.arc(x + 7, y + 8, 4, 0, 6.3); cx.stroke();
+    R('#e5e7eb', 6.3, 2, 1.4, 5); R('#dc2626', 6.3, 1, 1.4, 1.5);
+  } else if (t === 'goldmine') {
+    cx.fillStyle = '#6b5b3a'; cx.beginPath(); cx.moveTo(0, 13); cx.lineTo(7, 2); cx.lineTo(14, 13); cx.fill();
+    R('#fde047', 5, 8, 1.8, 1.8); R('#fde047', 8, 6, 1.8, 1.8); R('#fde047', 7, 10, 1.8, 1.8); R('#111', 5.5, 10, 3, 3);
+  } else if (t === 'smith') {
+    R('#6b7280', 1, 6, 12, 7); R('#374151', 9, 1, 3, 6); R('#f97316', 3, 9, 3, 4); R('#fde68a', 3.5, 10, 1.5, 2);
+  } else if (t === 'farm') {
+    R('#8a5a2b', 0, 4, 14, 9);
+    for (let i = 0; i < 5; i++) R('#e0b84a', 1, 5 + i * 1.7, 12, .9);
+    R('#b45309', 9, 1, 5, 4);
+  } else R(tc, 2, 2, 10, 10);
+
+  if (t !== 'wall') R(tc, 0, 13, 14, 1.2);
+  cx.globalAlpha = 1;
+}
+
+function drawUnit(type, team, hp, mh, px, py) {
+  const x = px + T / 2, y = py + T / 2, tc = teamColor(team);
+  cx.fillStyle = 'rgba(0,0,0,.25)'; cx.beginPath(); cx.ellipse(x, y + 4, 3.2, 1.2, 0, 0, 6.3); cx.fill();
+
+  if (type === 'tank') {
+    cx.fillStyle = '#3d4f2f'; cx.fillRect(x - 4.5, y - 2.5, 9, 5);
+    cx.fillStyle = tc; cx.fillRect(x - 4.5, y + 2, 9, 1.5);
+    cx.fillStyle = '#55703e'; cx.beginPath(); cx.arc(x, y - .5, 2.4, 0, 6.3); cx.fill();
+    cx.fillStyle = '#222'; cx.fillRect(x, y - 1, 6, 1.2);
+  } else if (type === 'ship') {
+    cx.fillStyle = '#64748b'; cx.beginPath(); cx.moveTo(x - 6, y - 1); cx.lineTo(x + 6, y - 1); cx.lineTo(x + 4, y + 3); cx.lineTo(x - 4, y + 3); cx.fill();
+    cx.fillStyle = '#e5e7eb'; cx.fillRect(x - 1, y - 5, 2, 4); cx.fillStyle = tc; cx.fillRect(x + 1, y - 5, 3, 2);
+  } else {
+    cx.fillStyle = type === 'worker' ? '#a0662f' : type === 'thief' ? '#222' : type === 'cmd' ? '#b45309' : tc;
+    cx.fillRect(x - 2, y - .5, 4, 4.2);
+    cx.fillStyle = '#f1c27d'; cx.beginPath(); cx.arc(x, y - 2.3, 1.8, 0, 6.3); cx.fill();
+    if (type === 'soldier' || type === 'cmd') {
+      cx.fillStyle = type === 'cmd' ? '#dc2626' : '#4d5d2f';
+      cx.beginPath(); cx.arc(x, y - 2.6, 1.9, Math.PI, 0); cx.fill();
+    }
+    if (type === 'worker') { cx.fillStyle = '#e0b84a'; cx.fillRect(x - 2.2, y - 3.6, 4.4, 1); }
+    cx.fillStyle = tc; cx.fillRect(x + 2, y - 5, 1.6, 1.6);
+  }
+  if (hp < mh) {
+    cx.fillStyle = '#f00';
+    cx.fillRect(px + 2, py, T * Math.max(0, hp) / mh, 2);
+  }
+}
+
+function drawMM() {
+  const m = $('mm'), g = m.getContext('2d');
+  g.drawImage(bg, 0, 0, 160, 80);
+  if (started && S) {
+    const k = 160 / (W * T);
+    for (const b of S.b) {
+      g.fillStyle = teamColor(b[2]);
+      g.fillRect(b[4] * T * k - 1, b[5] * T * k - 1, 3, 3);
+    }
+    g.strokeStyle = '#fff'; g.lineWidth = 1;
+    const vw = cv.width / cam.z * k, vh = cv.height / cam.z * k;
+    g.strokeRect(cam.x * k - vw / 2, cam.y * k - vh / 2, vw, vh);
+  }
+  m.style.bottom = ($('panel').offsetHeight + 16) + 'px';
+}
+
+/* ---------- ana çizim ---------- */
+function draw() {
+  cv.width = innerWidth;
+  cv.height = innerHeight;
+  const z = cam.z;
+  cx.save();
+  cx.translate(cv.width / 2 - cam.x * z, cv.height / 2 - cam.y * z);
+  cx.scale(z, z);
+  cx.drawImage(bg, 0, 0);
+
+  { /* dalga animasyonu */
+    const t0 = performance.now() / 600;
+    const x0 = Math.max(0, (cam.x - cv.width / 2 / z) / T | 0), x1 = Math.min(W - 1, (cam.x + cv.width / 2 / z) / T + 1 | 0);
+    const y0 = Math.max(0, (cam.y - cv.height / 2 / z) / T | 0), y1 = Math.min(H - 1, (cam.y + cv.height / 2 / z) / T + 1 | 0);
+    cx.fillStyle = 'rgba(255,255,255,.2)';
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      if (!isL(x, y) && (x * 7 + y * 3) % 4 === 0) cx.fillRect(x * T + 3 + Math.sin(t0 + x + y) * 1.5, y * T + 7, 6, 1);
+    }
+  }
+
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.font = '11px sans-serif';
+
+  if (started && S) {
+    const plant = myPlant();
+    for (const n of nodes.values()) if (n.t !== 'uran' || plant) nodeArt(n);
+
+    for (const b of S.b) {
+      drawBld(b[1], b[2], b[4], b[5], b[6]);
+      const t = b[1], team = b[2];
+      if (t === 'camp' || t === 'house') {
+        cx.font = 'bold 6px sans-serif';
+        cx.fillStyle = '#fff';
+      }
+      if (t === 'camp') {
+        const meta = teamMeta.get(team);
+        if (meta) cx.fillText(meta.name, (b[4] + .5) * T, (b[5] - .6) * T);
+      }
+      if (b[3] < b[7]) {
+        cx.fillStyle = '#f00';
+        cx.fillRect(b[4] * T, b[5] * T - 2, T * b[3] / b[7], 2);
+      }
+    }
+
+    cx.font = '11px sans-serif';
+    for (const u of S.u) {
+      const r = rend.get(u[0]);
+      if (!r) continue;
+      drawUnit(u[1], u[2], u[3], (US[u[1]] || { hp: 1 }).hp, r.x, r.y);
+    }
+
+    for (const m of S.m) {
+      const k = 1 - m[4] / 2.5;
+      cx.font = '16px sans-serif';
+      cx.fillText('🚀', (m[0] + (m[2] - m[0]) * k + .5) * T, (m[1] + (m[3] - m[1]) * k + .5) * T - Math.sin(k * 3.14) * 40);
+    }
+  }
+  cx.restore();
+
+  drawMM();
+
+  if (started && S && me) {
+    const res = me.res;
+    $('top').innerHTML =
+      '<span class="nm" style="display:inline-flex;align-items:center;gap:6px">' + yyAva() + '<i style="background:' + (teamMeta.get(me.team) || {}).col + '"></i>' + (yyCrown() ? '❄️👑 ' : '') + (teamMeta.get(me.team) || {}).name + '</span>' +
+      '<span class="gold">Sv ' + me.lv + ' • ' + SN[stageOf(me.lv)] + '</span>' +
+      '<span class="gold">💰 ' + res.para + '</span>' +
+      Object.keys(I).map((k) => '<span class="' + k + '">' + I[k] + ' ' + res[k] + '</span>').join('') +
+      '<span>👥 ' + me.pop + '/' + me.cap + '</span>' +
+      '<span>Kod: ' + (roomInfo ? roomInfo.code : '----') + '</span>';
+  }
+}
+
+let lastT = performance.now();
+(function loop(n) {
+  const dt = Math.min(.1, (n - lastT) / 1000);
+  lastT = n;
+  for (const r of rend.values()) {
+    r.x += (r.tx - r.x) * Math.min(1, dt * 12);
+    r.y += (r.ty - r.y) * Math.min(1, dt * 12);
+  }
+  draw();
+  requestAnimationFrame(loop);
+})(lastT);
+
+/* ---------- panel ---------- */
+const ct = (c) => Object.entries(c).map(([k, v]) => I[k] + v).join(' ');
+const affordable = (c) => me && Object.keys(c).every((k) => me.res[k] >= c[k]);
+const hasB = (type) => !!(S && S.b.some((b) => b[2] === me.team && b[1] === type && !(b[6] > 0)));
+
+function tabs() {
+  const T2 = { build: '🏗️ İnşa', unit: '🪖 Birlik', task: '⛏️ Görev', nuke: '☢️ Nükleer', eco: '💰 Pazar', camp: '🏕️ Kamp', room: '👥 Oda' };
+  const tb = $('tabs');
+  tb.innerHTML = '';
+  for (const k in T2) {
+    const b = document.createElement('button');
+    b.textContent = T2[k];
+    if (k === tab) b.className = 'on';
+    b.onclick = () => { tab = k; mode = null; tabs(); };
+    tb.appendChild(b);
+  }
+  const it = $('items');
+  it.innerHTML = '';
+  const add = (label, sub, fn, on) => {
+    const b = document.createElement('button');
+    b.innerHTML = label + '<small>' + (sub || '') + '</small>';
+    if (on) b.className = 'on';
+    b.onclick = () => { fn(); tabs(); };
+    it.appendChild(b);
+  };
+
+  if (!S || !me) return;
+
+  if (tab === 'build') {
+    for (const k in BC) {
+      const lock = (LV[k] || 0) > me.lv;
+      add(BI[k] + ' ' + BN[k], ct(BC[k]) + (lock ? ' 🔒Sv' + LV[k] : ''), () => {
+        if (lock) return flash('Seviye ' + LV[k] + ' gerekli', true);
+        mode = { b: k };
+        flash(BN[k] + ' için haritaya dokun', false);
+      }, mode && mode.b === k);
+    }
+  }
+
+  if (tab === 'unit') {
+    for (const k of ['worker', 'soldier', 'tank', 'ship']) {
+      const lock = (LV[k] || 0) > me.lv;
+      add(UI[k] + ' ' + US[k].n, ct(US[k].c) + (lock ? ' 🔒Sv' + LV[k] : ''), () => cmd({ a: 'train', k }));
+    }
+    add('🎖️ Komutan', '💰' + 80 * (1 + (S.u.filter((u) => u[2] === me.team && u[1] === 'cmd').length)) + ' 🟡30', () => cmd({ a: 'hire' }));
+  }
+
+  if (tab === 'task') {
+    for (const k in I) {
+      if (k === 'gold') continue;
+      add(I[k] + ' ' + N[k], k === 'uran' && !hasB('plant') ? 'santral gerekli' : 'Tüm işçiler', () => cmd({ a: 'task', k }));
+    }
+  }
+
+  if (tab === 'nuke') {
+    add('☢️ Füze Fırlat', hasB('silo') && hasB('plant') ? '☢️20 uranyum' : 'rampa + santral gerekli', () => {
+      if (!hasB('silo') || !hasB('plant')) return flash('Rampa ve santral gerekli', true);
+      mode = 'nuke';
+      flash('Hedefe dokun', false);
+    }, mode === 'nuke');
+  }
+
+  if (tab === 'eco') {
+    for (const k of ['wood', 'fish', 'wheat', 'stone', 'iron', 'coal', 'gold', 'uran']) {
+      add(N[k] + ' Sat', '50 → 💰' + Math.round(50 * PR[k] * .6), () => cmd({ a: 'eco', k: 'sell', r: k }));
+      add(N[k] + ' Al', '💰' + Math.round(50 * PR[k] * 1.5) + ' → 50', () => cmd({ a: 'eco', k: 'buy', r: k }));
+    }
+  }
+
+  if (tab === 'camp') {
+    const L = me.lv;
+    add('⭐ Kamp Sv ' + L + ' • ' + SN[stageOf(L)], 'Sv 10 asker/komutan • 15 gemi • 30 tank • 100 nükleer', () => {});
+    add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => cmd({ a: 'camp' }));
+  }
+
+  if (tab === 'room') {
+    add('🔑 Oda kodu: ' + (roomInfo ? roomInfo.code : '----'), roomInfo ? roomInfo.name : '', () => {});
+    for (const p of (S.p || [])) {
+      add((p.alive ? '🟢' : '💀') + ' ' + p.c, p.n + ' • Sv ' + p.lv + ' • 👥' + p.pop + '/' + p.cap, () => {
+        cam.x = W * T / 2; cam.y = H * T / 2;
+      });
+    }
+    add('🚪 Odadan Ayrıl', 'Lobiyе döner', () => send({ t: 'leave' }));
+    if (S.over) add('🔄 Yeniden Oyna', 'Yeni savaş', () => cmd({ a: 'restart' }));
+  }
+}
+
+/* ---------- kontroller ---------- */
+let pd = null;
+cv.onpointerdown = (e) => {
+  pd = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, m: 0 };
+  cv.setPointerCapture(e.pointerId);
+};
+cv.onpointermove = (e) => {
+  if (!pd) return;
+  const dx = e.clientX - pd.x, dy = e.clientY - pd.y;
+  if (Math.hypot(dx, dy) > 8) pd.m = 1;
+  if (pd.m) { cam.x = pd.cx - dx / cam.z; cam.y = pd.cy - dy / cam.z; }
+};
+cv.onpointerup = (e) => {
+  if (pd && !pd.m) tap((e.clientX - cv.width / 2) / cam.z + cam.x, (e.clientY - cv.height / 2) / cam.z + cam.y);
+  pd = null;
+};
+cv.onwheel = (e) => { cam.z = Math.max(.4, Math.min(3, cam.z * (e.deltaY < 0 ? 1.15 : .87))); };
+
+function tap(px, py) {
+  if (!started || !S || !me) return;
+  const x = px / T | 0, y = py / T | 0;
+  if (mode === 'nuke') {
+    cmd({ a: 'nuke', x, y });
+    mode = null;
+    tabs();
+    return;
+  }
+  if (mode && mode.b) {
+    cmd({ a: 'build', k: mode.b, x, y });
+    mode = null;
+    tabs();
+  }
+}
+
+$('hp').onclick = () => { const p = $('panel'); p.style.display = p.style.display === 'none' ? 'flex' : 'none'; };
+$('zi').onclick = () => cam.z = Math.min(3, cam.z * 1.3);
+$('zo').onclick = () => cam.z = Math.max(.4, cam.z / 1.3);
+
+$('mm').onpointerdown = (e) => {
+  const r = $('mm').getBoundingClientRect();
+  cam.x = (e.clientX - r.left) / r.width * W * T;
+  cam.y = (e.clientY - r.top) / r.height * H * T;
+};
+
+/* ---------- lobi olayları ---------- */
+function profile() {
+  const name = $('pn').value.trim() || 'Oyuncu';
+  const country = $('cn').value.trim() || 'Kara birliği';
+  const color = $('cc').value;
+  try {
+    localStorage.setItem('ds_mp_profile', JSON.stringify({ name, country, color }));
+  } catch (e) {}
+  return { name, country, color };
+}
+
+function joinRoom(code) {
+  const d = profile();
+  send({ t: 'join', code, name: d.name, country: d.country, color: d.color });
+}
+
+$('create').onclick = () => {
+  const d = profile();
+  const max = parseInt($('rm').value, 10) || 4;
+  const ai = parseInt($('ra').value, 10) || 0;
+  if (ws && ws.readyState === 1) {
+    send({ t: 'create', rname: $('rn').value.trim() || (d.name + ' odası'), max, ai, name: d.name, country: d.country, color: d.color });
+  } else lerr('Sunucuya bağlı değil.');
+};
+
+$('joinCode').onclick = () => {
+  const code = $('jc').value.trim().toUpperCase();
+  if (code.length !== 4) return lerr('4 haneli oda kodu gir.');
+  joinRoom(code);
+};
+
+$('start').onclick = () => send({ t: 'start' });
+$('leave').onclick = () => send({ t: 'leave' });
+$('ovRestart').onclick = () => { cmd({ a: 'restart' }); $('over').hidden = true; };
+$('ovWatch').onclick = () => { $('over').hidden = true; };
+$('reload').onclick = () => location.reload();
+
+try {
+  const p = JSON.parse(localStorage.getItem('ds_mp_profile') || 'null');
+  if (p) {
+    if (p.name) $('pn').value = p.name;
+    if (p.country) $('cn').value = p.country;
+    if (p.color) $('cc').value = p.color;
+  }
+  const pic = localStorage.getItem('yy_av');
+  if (pic) {
+    const pn = $('pn');
+    pn.style.backgroundImage = 'url(' + pic + ')';
+    pn.style.backgroundSize = '24px 24px';
+    pn.style.backgroundPosition = '10px center';
+    pn.style.backgroundRepeat = 'no-repeat';
+    pn.style.paddingLeft = '44px';
+  }
+} catch (e) {}
+
+conn();
+</script>
+</body>
+</html>
