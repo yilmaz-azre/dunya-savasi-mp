@@ -51,6 +51,28 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
 #over h2{font-size:26px;margin-bottom:6px}#over p{color:#9fb0c9;font-size:14px;margin-bottom:16px}
 #over button{margin:4px;background:#0d9488;border-color:#0d9488}
 #over button.alt{background:#2c3a52;border-color:#2a3446}
+/* ---------- sohbet ---------- */
+#zoom #chatTgl{position:relative;font-size:18px}
+#chatBadge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:9px;font:700 10px/1.4 system-ui;padding:0 5px;min-width:16px}
+#chatp{position:fixed;right:56px;top:120px;width:340px;max-width:calc(100vw - 72px);height:min(48vh,400px);background:rgba(9,14,21,.97);border:1px solid #2a3446;border-radius:14px;z-index:9;display:none;flex-direction:column;overflow:hidden;box-shadow:0 14px 40px #000b}
+#chatp.open{display:flex}
+.chathead{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#101720;border-bottom:1px solid #2a3446}
+.chathead b{color:#5eead4;font-size:12px;letter-spacing:.14em}
+.chathead .cr{margin-left:auto;color:#7f8ea6;font-weight:700;font-size:11px}
+.chathead .mini{min-height:28px;padding:2px 8px;font-size:13px;background:#1a2433}
+#chatlog{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:13px;user-select:text}
+#chatlog:empty::after{content:"Henüz mesaj yok. İlk mesajı sen yaz.";color:#6b7a90;text-align:center;margin:auto;font-size:12px}
+.cm{max-width:96%;padding:6px 9px;border-radius:9px;background:#141c28;border-left:3px solid #334155}
+.cm.mine{align-self:flex-end;background:#0f2f2c;border-left-color:#0d9488}
+.cm .hd{display:flex;gap:6px;align-items:baseline;font-size:11px;color:#9fb0c9;margin-bottom:2px}
+.cm .hd b{font-size:12px}
+.cm .hd small{margin-left:auto;color:#6b7a90}
+.cm .tx{color:#e8ecf4;line-height:1.35;word-break:break-word}
+.chatin{display:flex;gap:6px;padding:8px;border-top:1px solid #2a3446;background:#0c121a}
+.chatin input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid #2a3446;background:#0d1117;color:#fff;font-size:14px;user-select:text}
+.chatin input:focus{outline:none;border-color:#0d9488}
+.chatin button{background:#0d9488;border-color:#0d9488;padding:0 14px}
+@media(max-width:640px){#chatp{right:8px;top:auto;bottom:calc(42vh + 14px);height:min(40vh,340px)}}
 [hidden]{display:none !important}
 </style>
 </head>
@@ -59,8 +81,13 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
 <div id="top"></div>
 <div id="msg"></div>
 <canvas id="mm" width="160" height="80"></canvas>
-<div id="zoom"><button id="hp">☰</button><button id="zi">+</button><button id="zo">−</button></div>
+<div id="zoom"><button id="chatTgl" title="Sohbet (Enter)">💬<i id="chatBadge" hidden>0</i></button><button id="hp">☰</button><button id="zi">+</button><button id="zo">−</button></div>
 <div id="panel"><div id="tabs"></div><div id="items"></div></div>
+<div id="chatp">
+  <div class="chathead"><b>💬 SOHBET</b><span class="cr" id="chatroom"></span><button class="mini" id="chatMute" title="Bildirim sesi">🔔</button><button class="mini" id="chatClose" title="Kapat (Esc)">✕</button></div>
+  <div id="chatlog"></div>
+  <div class="chatin"><input id="chattext" maxlength="160" placeholder="Mesaj yaz… (Enter)"><button id="chatsend">Gönder</button></div>
+</div>
 
 <div id="over" hidden><div class="oc">
   <h2 id="ovt"></h2><p id="ovp"></p>
@@ -260,6 +287,118 @@ function flash(text, bad) {
   flash.t = setTimeout(() => { el.style.display = 'none'; }, 2400);
 }
 
+/* ---------- sohbet ---------- */
+let chatOn = false, chatUnread = 0, chatStore = [], chatRoomCode = '', audioCtx = null;
+let chatMute = false;
+try { chatMute = localStorage.getItem('ds_chat_mute') === '1'; } catch (e) {}
+function chatLsKey(code) { return 'ds_chat_' + code; }
+function chatTime(ts) {
+  const d = new Date(ts || Date.now());
+  return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+}
+function paintBadge() {
+  const b = $('chatBadge');
+  if (chatUnread > 0 && !chatOn) { b.hidden = false; b.textContent = chatUnread > 99 ? '99' : chatUnread; }
+  else b.hidden = true;
+  $('chatMute').textContent = chatMute ? '🔕' : '🔔';
+}
+function chatLoad(code, serverHist) {
+  chatRoomCode = code || '';
+  $('chatroom').textContent = code ? '#' + code : '';
+  chatStore = [];
+  if (code) {
+    try { chatStore = JSON.parse(localStorage.getItem(chatLsKey(code)) || '[]') || []; } catch (e) { chatStore = []; }
+  }
+  if (Array.isArray(serverHist)) {
+    for (const m of serverHist) {
+      if (!chatStore.some((q) => q.ts === m.ts && q.id === m.id && q.x === m.x)) chatStore.push(m);
+    }
+    chatStore.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    if (chatStore.length > 120) chatStore = chatStore.slice(-120);
+    chatSave();
+  }
+  renderChat();
+}
+function chatSave() {
+  if (!chatRoomCode) return;
+  try { localStorage.setItem(chatLsKey(chatRoomCode), JSON.stringify(chatStore.slice(-120))); } catch (e) {}
+}
+function renderChat() {
+  const log = $('chatlog');
+  log.innerHTML = '';
+  for (const m of chatStore) {
+    const d = document.createElement('div');
+    d.className = 'cm' + (myId && m.id === myId ? ' mine' : '');
+    const hd = document.createElement('div'); hd.className = 'hd';
+    const b = document.createElement('b'); b.textContent = m.n || '?'; if (m.col) b.style.color = m.col;
+    const c = document.createElement('span'); c.textContent = m.c || '';
+    const t = document.createElement('small'); t.textContent = chatTime(m.ts);
+    hd.append(b, c, t);
+    const tx = document.createElement('div'); tx.className = 'tx'; tx.textContent = m.x;
+    d.append(hd, tx);
+    log.appendChild(d);
+  }
+  log.scrollTop = log.scrollHeight;
+}
+function unlockAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+function chatDing() {
+  if (chatMute) return;
+  try {
+    unlockAudio();
+    if (!audioCtx) return;
+    const t0 = audioCtx.currentTime;
+    const beep = (f, t, dur, g) => {
+      const o = audioCtx.createOscillator(), n = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      n.gain.setValueAtTime(0.0001, t);
+      n.gain.exponentialRampToValueAtTime(g, t + 0.012);
+      n.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(n); n.connect(audioCtx.destination);
+      o.start(t); o.stop(t + dur + 0.03);
+    };
+    beep(988, t0, 0.11, 0.2);
+    beep(1319, t0 + 0.115, 0.16, 0.16);
+  } catch (e) {}
+}
+function addChatMsg(m, silent) {
+  if (!m || !m.x) return;
+  if (chatStore.some((q) => q.ts === m.ts && q.id === m.id && q.x === m.x)) return;
+  chatStore.push(m);
+  if (chatStore.length > 120) chatStore.splice(0, chatStore.length - 120);
+  chatSave();
+  renderChat();
+  const mine = myId && m.id === myId;
+  if (!mine && !silent) {
+    chatDing();
+    if (!chatOn) { chatUnread++; paintBadge(); }
+  }
+}
+function setChat(on, focus) {
+  chatOn = !!on;
+  $('chatp').classList.toggle('open', chatOn);
+  $('chatTgl').classList.toggle('on', chatOn);
+  if (chatOn) {
+    chatUnread = 0; paintBadge();
+    const log = $('chatlog'); log.scrollTop = log.scrollHeight;
+    if (focus) setTimeout(() => $('chattext').focus(), 30);
+  } else if (document.activeElement === $('chattext')) $('chattext').blur();
+}
+function sendChat() {
+  const el = $('chattext');
+  const t = el.value.trim();
+  if (!t) return;
+  if (!ws || ws.readyState !== 1) return flash('Bağlantı yok', true);
+  ws.send(JSON.stringify({ t: 'chat', text: t }));
+  el.value = '';
+}
+
 function lerr(text) {
   $('lhint').textContent = text;
   flash(text, true);
@@ -274,6 +413,7 @@ function handle(m) {
     roomInfo = m.room;
     started = !!m.started;
     overSeen = false;
+    chatLoad(m.room.code, m.chat);
     if (started && m.state) {
       applySnap(m.state);
       nodes = new Map((m.nodes || []).map((n) => [n[0], { id: n[0], x: n[1], y: n[2], t: n[3] }]));
@@ -288,7 +428,18 @@ function handle(m) {
   if (m.t === 'room') {
     roomInfo = m.room;
     renderRoom();
-    if (!roomInfo.started && started) { /* oyun sıfırlandı */ }
+    if (!roomInfo.started && started) {
+      started = false; S = null; me = null; mode = null; overSeen = false;
+      $('over').hidden = true;
+      $('panel').style.display = 'none';
+      $('mm').style.display = 'none';
+      $('zoom').style.display = 'none';
+      $('top').innerHTML = '';
+      nodes.clear(); rend.clear();
+      setChat(false);
+      showLobby('room'); renderRoom();
+      flash('Oyun sıfırlandı — yeniden başlatabilirsin', true);
+    }
     return;
   }
 
@@ -309,6 +460,7 @@ function handle(m) {
   }
 
   if (m.t === 'msg') return flash(m.text, m.bad);
+  if (m.t === 'chat') return addChatMsg(m.m);
   if (m.t === 'ev') {
     flash(m.text, m.bad);
     if (started && !overSeen) $('msg').style.display = 'block';
@@ -318,6 +470,7 @@ function handle(m) {
   if (m.t === 'left') {
     roomInfo = null; started = false; S = null; me = null;
     nodes.clear(); rend.clear();
+    chatLoad(null); setChat(false);
     $('over').hidden = true;
     $('panel').style.display = 'none';
     $('top').innerHTML = '';
@@ -392,6 +545,7 @@ function enterGame() {
   if (camp) { cam.x = (camp[4] + .5) * T; cam.y = (camp[5] + .5) * T; }
   tabs();
   draw();
+  if (window.innerWidth >= 900 && !chatOn) setChat(true);
 }
 
 /* ---------- anlık görüntü ---------- */
@@ -721,8 +875,20 @@ function tabs() {
 
   if (tab === 'camp') {
     const L = me.lv;
+    const camp = S.b.find((b) => b[2] === me.team && b[1] === 'camp' && !(b[6] > 0));
     add('⭐ Kamp Sv ' + L + ' • ' + SN[stageOf(L)], 'Sv 10 asker/komutan • 15 gemi • 30 tank • 100 nükleer', () => {});
-    add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => cmd({ a: 'camp' }));
+    if (camp) {
+      add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => cmd({ a: 'camp' }));
+      add('🚚 Kampı Taşı', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
+        mode = 'campPlace';
+        flash('Kampı taşımak için haritada boş bir kareye dokun', false);
+      }, mode === 'campPlace');
+    } else {
+      add('🏕️ Kamp Kur', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
+        mode = 'campPlace';
+        flash('Kamp kurmak için haritada boş bir kareye dokun', false);
+      }, mode === 'campPlace');
+    }
   }
 
   if (tab === 'room') {
@@ -764,6 +930,12 @@ function tap(px, py) {
     tabs();
     return;
   }
+  if (mode === 'campPlace') {
+    cmd({ a: 'campPlace', x, y });
+    mode = null;
+    tabs();
+    return;
+  }
   if (mode && mode.b) {
     cmd({ a: 'build', k: mode.b, x, y });
     mode = null;
@@ -774,6 +946,30 @@ function tap(px, py) {
 $('hp').onclick = () => { const p = $('panel'); p.style.display = p.style.display === 'none' ? 'flex' : 'none'; };
 $('zi').onclick = () => cam.z = Math.min(3, cam.z * 1.3);
 $('zo').onclick = () => cam.z = Math.max(.4, cam.z / 1.3);
+
+/* ---------- sohbet olayları ---------- */
+$('chatTgl').onclick = () => setChat(!chatOn, true);
+$('chatClose').onclick = () => setChat(false);
+$('chatMute').onclick = () => {
+  chatMute = !chatMute;
+  try { localStorage.setItem('ds_chat_mute', chatMute ? '1' : '0'); } catch (e) {}
+  paintBadge();
+  if (!chatMute) chatDing();
+};
+$('chatsend').onclick = sendChat;
+$('chattext').addEventListener('keydown', (e) => {
+  e.stopPropagation();
+  if (e.key === 'Enter') { e.preventDefault(); sendChat(); }
+  else if (e.key === 'Escape') { e.preventDefault(); setChat(false); }
+});
+addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.key === 'Enter' && started) { e.preventDefault(); setChat(true, true); }
+  else if (e.key === 'Escape' && chatOn) setChat(false);
+});
+addEventListener('pointerdown', unlockAudio, { once: true });
+paintBadge();
 
 $('mm').onpointerdown = (e) => {
   const r = $('mm').getBoundingClientRect();

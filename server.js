@@ -128,6 +128,7 @@ class Room {
     this.nodeCh = new Map();
     this.snapTick = 0;
     this.nodeTick = 0;
+    this.chat = [];
     this.emp = Date.now();
   }
 
@@ -195,6 +196,7 @@ class Room {
     this.nodeCh.clear();
     this.tm = 0;
     this.ids = 1;
+    this.chat = [];
   }
 
   /* --- dünya kurulumu --- */
@@ -635,6 +637,26 @@ function doCmd(R, p, m) {
     return flash(p, 'Kamp Seviye ' + p.lv, false);
   }
 
+  if (m.a === 'campPlace') {
+    const x = m.x | 0, y = m.y | 0;
+    const camp = R.campOf(p.team);
+    const now = Date.now();
+    const cost = { wood: 40, stone: 20, para: 25 };
+    if (!isL(x, y)) return flash(p, 'Karaya kur');
+    if (R.bldAt(x, y)) return flash(p, 'Burası dolu');
+    if (R.nodeAt(x, y)) return flash(p, 'Kaynak dolu, başka kare seç');
+    if (camp && now - (p.campAt || 0) < 60000) return flash(p, 'Kampı dakikada bir taşıyabilirsin');
+    if (!R.can(p, cost)) return flash(p, 'Kaynak yetersiz (🌲40 🪨20 💰25)');
+    R.pay(p, cost);
+    if (camp) {
+      camp.x = x; camp.y = y; camp.hp = camp.mh;
+      p.campAt = now;
+      return flash(p, 'Kamp taşındı', false);
+    }
+    R.addB('camp', p.team, x, y);
+    return flash(p, 'Kamp kuruldu', false);
+  }
+
   if (m.a === 'hire') {
     if (p.lv < 10) return flash(p, 'Komutan için Kamp Sv 10 gerekli');
     const n = R.units.filter((u) => u.team === p.team && u.type === 'cmd').length;
@@ -737,7 +759,8 @@ function attach(ws, R, d) {
     me: { id: p.id, team: p.team },
     started: R.started,
     state: R.started ? R.snap(p) : null,
-    nodes: R.started ? R.nodes.map((n) => [n.id, n.x, n.y, n.t]) : null
+    nodes: R.started ? R.nodes.map((n) => [n.id, n.x, n.y, n.t]) : null,
+    chat: R.chat.slice(-60)
   });
   R.bcast({ t: 'room', room: R.info() });
   pushRooms();
@@ -792,6 +815,24 @@ wss.on('connection', (ws) => {
     if (!R || !ws.player) return;
 
     if (m.t === 'start') { R.start(); pushRooms(); return; }
+
+    if (m.t === 'chat') {
+      const p = ws.player;
+      const text = String(m.text == null ? '' : m.text)
+        .replace(/[\u0000-\u001f\u007f]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 160);
+      if (!text) return;
+      const now = Date.now();
+      if (now - (p.chatAt || 0) < 700) return;
+      p.chatAt = now;
+      const msg = { id: p.id, n: p.name, c: p.country, col: p.color, x: text, ts: now };
+      R.chat.push(msg);
+      if (R.chat.length > 80) R.chat.shift();
+      R.bcast({ t: 'chat', m: msg });
+      return;
+    }
 
     if (m.t === 'cmd') {
       if (m.a === 'restart') {
