@@ -85,6 +85,106 @@ const stageOf = (lv) => (lv >= 100 ? 4 : lv >= 50 ? 3 : lv >= 25 ? 2 : lv >= 10 
 const hostile = (a, b) => a !== b && a !== 9 && b !== 9;
 const walkable = (type, x, y) => (US[type] && US[type].water ? (x >= 0 && y >= 0 && x < W && y < H && !isL(x, y)) : isL(x, y));
 
+/* ---------------- bağlantı bileşenleri + yol bulma ---------------- */
+function buildComps(sea) {
+  const comp = new Int16Array(W * H).fill(-1);
+  const q = new Int32Array(W * H);
+  let id = 0;
+  for (let i = 0; i < W * H; i++) {
+    if ((land[i] === 0) !== sea || comp[i] !== -1) continue;
+    let h = 0, t = 0;
+    comp[i] = id; q[t++] = i;
+    while (h < t) {
+      const c = q[h++], x = c % W, y = (c / W) | 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        const ni = ny * W + nx;
+        if (comp[ni] !== -1 || (land[ni] === 0) !== sea) continue;
+        comp[ni] = id; q[t++] = ni;
+      }
+    }
+    id++;
+  }
+  return comp;
+}
+const COMP_L = buildComps(false), COMP_S = buildComps(true);
+const compOf = (water, x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? -1 : (water ? COMP_S : COMP_L)[y * W + x];
+
+const DIR8 = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, 1.4142], [1, -1, 1.4142], [-1, 1, 1.4142], [-1, -1, 1.4142]];
+const pGen = new Int32Array(W * H), pG = new Float32Array(W * H), pPar = new Int32Array(W * H);
+const hIdx = new Int32Array(W * H), hF = new Float32Array(W * H);
+let pSeq = 0;
+
+function findPath(water, sx, sy, tx, ty) {
+  if (sx === tx && sy === ty) return [];
+  const c0 = compOf(water, sx, sy);
+  if (c0 < 0 || c0 !== compOf(water, tx, ty)) return null;
+  const seq = ++pSeq, goal = ty * W + tx, start = sy * W + sx;
+  let hn = 0;
+  const push = (i, f) => {
+    let c = hn++;
+    hIdx[c] = i; hF[c] = f;
+    while (c > 0) {
+      const p = (c - 1) >> 1;
+      if (hF[p] <= hF[c]) break;
+      const ti = hIdx[p], tf = hF[p];
+      hIdx[p] = hIdx[c]; hF[p] = hF[c];
+      hIdx[c] = ti; hF[c] = tf;
+      c = p;
+    }
+  };
+  const pop = () => {
+    const top = hIdx[0];
+    hn--;
+    if (hn > 0) {
+      hIdx[0] = hIdx[hn]; hF[0] = hF[hn];
+      let c = 0;
+      for (;;) {
+        const l = c * 2 + 1, r = l + 1;
+        if (l >= hn) break;
+        let m = l;
+        if (r < hn && hF[r] < hF[l]) m = r;
+        if (hF[c] <= hF[m]) break;
+        const ti = hIdx[c], tf = hF[c];
+        hIdx[c] = hIdx[m]; hF[c] = hF[m];
+        hIdx[m] = ti; hF[m] = tf;
+        c = m;
+      }
+    }
+    return top;
+  };
+  const hc = (i) => {
+    const dx = Math.abs((i % W) - tx), dy = Math.abs(((i / W) | 0) - ty);
+    return (dx > dy ? dx : dy) + .4142 * (dx < dy ? dx : dy);
+  };
+  pGen[start] = seq; pG[start] = 0; pPar[start] = -1;
+  push(start, hc(start));
+  let iter = 0;
+  while (hn > 0 && iter++ < 9000) {
+    const cur = pop();
+    if (cur === goal) break;
+    const cx = cur % W, cy = (cur / W) | 0;
+    for (let d = 0; d < 8; d++) {
+      const nx = cx + DIR8[d][0], ny = cy + DIR8[d][1];
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      const ni = ny * W + nx;
+      if ((land[ni] === 0) !== water) continue;
+      const ng = pG[cur] + DIR8[d][2];
+      if (pGen[ni] === seq && pG[ni] <= ng) continue;
+      pGen[ni] = seq; pG[ni] = ng; pPar[ni] = cur;
+      push(ni, ng + hc(ni));
+    }
+  }
+  if (pGen[goal] !== seq) return null;
+  const out = [];
+  let c = goal;
+  while (c !== start) { out.push({ x: c % W, y: (c / W) | 0 }); c = pPar[c]; }
+  out.reverse();
+  return out;
+}
+
 /* ---------------- oda ---------------- */
 let nextPid = 1;
 const rooms = new Map();
@@ -237,6 +337,16 @@ class Room {
 
   pushNode(x, y, t) {
     const n = { id: this.ids++, x, y, t, a: 30 };
+    if (t === 'fish') {
+      let best = null, bd = 1e9;
+      for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+        const nx = x + dx, ny = y + dy;
+        if (!isL(nx, ny)) continue;
+        const d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = [nx, ny]; }
+      }
+      if (best) { n.lx = best[0]; n.ly = best[1]; }
+    }
     this.nodes.push(n);
     this.nodeAdd.push([n.id, x, y, t]);
     return n;
@@ -263,6 +373,18 @@ class Room {
     }
   }
 
+  fishCluster(cx, cy, n) {
+    let placed = 0;
+    for (let k = 0; k < 300 && placed < n && this.nodes.length < 900; k++) {
+      const x = (cx + Math.random() * 44 - 22) | 0;
+      const y = (cy + Math.random() * 44 - 22) | 0;
+      if (isL(x, y) || !coastal(x, y) || this.nodeAt(x, y) || this.bldAt(x, y)) continue;
+      this.pushNode(x, y, 'fish');
+      placed++;
+    }
+    return placed;
+  }
+
   spot() {
     let best = null, bd = -1;
     for (let k = 0; k < 500; k++) {
@@ -286,6 +408,7 @@ class Room {
     this.addB('camp', p.team, x, y);
     for (let i = 0; i < 3; i++) this.addU('worker', p.team, x + rand(-1, 1), y + 1);
     this.cluster(x, y, 90);
+    this.fishCluster(x, y, 14);
   }
 
   addAI() {
@@ -297,6 +420,7 @@ class Room {
     this.addB('camp', team, x, y);
     this.addB('tower', team, x + 1, y);
     for (let i = 0; i < 3; i++) this.addU('soldier', team, x, y + 1);
+    this.fishCluster(x, y, 8);
   }
 
   start() {
@@ -336,6 +460,34 @@ class Room {
     if (walkable(u.type, u.x + mx, u.y + my)) { u.x += mx; u.y += my; }
     else if (walkable(u.type, u.x + mx, u.y)) u.x += mx;
     else if (walkable(u.type, u.x, u.y + my)) u.y += my;
+  }
+
+  los(u, tx, ty) {
+    const d = Math.hypot(tx - u.x, ty - u.y);
+    if (d < .3) return true;
+    const n = Math.ceil(d / .4);
+    for (let i = 1; i <= n; i++) {
+      const k = i / n;
+      if (!walkable(u.type, u.x + (tx - u.x) * k, u.y + (ty - u.y) * k)) return false;
+    }
+    return true;
+  }
+
+  move(u, tx, ty, dt) {
+    if (this.los(u, tx, ty)) { u.p = null; return this.step(u, tx, ty, dt); }
+    const gx = tx | 0, gy = ty | 0, water = !!(US[u.type] && US[u.type].water);
+    if (!u.p || u.pgx !== gx || u.pgy !== gy || u.pi >= (u.p ? u.p.length : 0)) {
+      u.p = findPath(water, u.x | 0, u.y | 0, gx, gy);
+      u.pgx = gx; u.pgy = gy; u.pi = 0;
+      if (!u.p) return this.step(u, tx, ty, dt);
+    }
+    let node = u.p[u.pi];
+    while (node && Math.hypot(node.x + .5 - u.x, node.y + .5 - u.y) < .45) {
+      u.pi++;
+      node = u.p[u.pi];
+    }
+    if (!node) { u.p = null; return this.step(u, tx, ty, dt); }
+    this.step(u, node.x + .5, node.y + .5, dt);
   }
 
   near(u, range) {
@@ -378,6 +530,8 @@ class Room {
     if (Math.random() < dt / 1.3) R.spawnNode();
 
     /* --- birlikler --- */
+    const wTg = new Map();
+    for (const u of R.units) if (u.type === 'worker' && u.tg) wTg.set(u.tg, (wTg.get(u.tg) || 0) + 1);
     for (const u of R.units) {
       const st = US[u.type];
       if (!st) continue;
@@ -386,15 +540,23 @@ class Room {
       if (u.type === 'worker') {
         const owner = R.players.find((p) => p.team === u.team);
         if (!owner) continue;
-        let bd = 1e9, bn = null;
+        const comp = compOf(false, u.x | 0, u.y | 0);
+        let bd = 1e9, bn = null, bx = 0, by = 0;
         for (const n of R.nodes) {
           if (n.t !== u.task) continue;
           if (n.t === 'uran' && !R.has(owner, 'plant')) continue;
-          const d = Math.hypot(n.x - u.x, n.y - u.y);
-          if (d < bd) { bd = d; bn = n; }
+          if (u.ban && u.ban.get(n.id) > R.tm) continue;
+          const gx = n.lx !== undefined ? n.lx : n.x, gy = n.ly !== undefined ? n.ly : n.y;
+          if (compOf(false, gx | 0, gy | 0) !== comp) continue;
+          const crowd = Math.max(0, (wTg.get(n.id) || 0) - 1);
+          const d = Math.hypot(gx - u.x, gy - u.y) + crowd * 2.4 - (n.id === u.tg ? 2.5 : 0);
+          if (d < bd) { bd = d; bn = n; bx = gx; by = gy; }
         }
         if (!bn) continue;
-        if (bd < 1.7) {
+        u.tg = bn.id;
+        const reach = Math.hypot(bx - u.x, by - u.y);
+        if (reach < 1.9) {
+          u.p = null;
           if (u.cd <= 0) {
             u.cd = .6;
             bn.a -= 2;
@@ -404,7 +566,19 @@ class Room {
             owner.xp += 2;
             if (bn.a <= 0) R.nodeDie(bn);
           }
-        } else R.step(u, bn.x, bn.y, dt);
+          u.stk = 0;
+        } else {
+          R.move(u, bx, by, dt);
+          u.stk = (u.stk || 0) + dt;
+          if (u.stk >= 1.5) {
+            if (u.ax !== undefined && Math.hypot(u.x - u.ax, u.y - u.ay) < .3) {
+              u.ban = u.ban || new Map();
+              u.ban.set(bn.id, R.tm + 25);
+              u.p = null;
+            }
+            u.ax = u.x; u.ay = u.y; u.stk = 0;
+          }
+        }
         continue;
       }
 
@@ -428,7 +602,7 @@ class Room {
             }
           }
           u.hp = 0;
-        } else R.step(u, tg.x, tg.y, dt);
+        } else R.move(u, tg.x, tg.y, dt);
         continue;
       }
 
@@ -436,17 +610,17 @@ class Room {
         const tg = R.near(u);
         if (tg) {
           const e = Math.hypot(tg.x - u.x, tg.y - u.y);
-          if (e > st.rg) R.step(u, tg.x, tg.y, dt);
+          if (e > st.rg) R.move(u, tg.x, tg.y, dt);
           else if (u.cd <= 0) {
             u.cd = 1;
             const boost = R.units.some((c) => c.type === 'cmd' && c.team === u.team && Math.hypot(c.x - u.x, c.y - u.y) < 6) ? 1.5 : 1;
             tg.hp -= st.atk * boost;
           }
         } else if (u.team >= 100 && u.goal) {
-          R.step(u, u.goal.x, u.goal.y, dt);
+          R.move(u, u.goal.x, u.goal.y, dt);
         } else if (u.team < 100) {
           const c = R.campOf(u.team);
-          if (c && Math.hypot(u.x - c.x, u.y - c.y) > 6) R.step(u, c.x, c.y, dt);
+          if (c && Math.hypot(u.x - c.x, u.y - c.y) > 6) R.move(u, c.x, c.y, dt);
         }
       }
     }
@@ -934,12 +1108,14 @@ setInterval(() => {
     if (R.started && !R.over && R.players.some((p) => p.ws)) {
       try { R.tick(.1); } catch (e) { console.error('tick', e); }
     }
-    /* anlık görüntü: 5 Hz */
-    if (tickN % 2 === 0) {
+    /* anlık görüntü: normalde 10 Hz, büyük savaşta 5 Hz */
+    R.snapCd = (R.snapCd || 0) - .1;
+    if (R.snapCd <= 0) {
       for (const p of R.players) {
         if (!p.ws) continue;
         try { send(p, R.snap(p)); } catch (e) { /* yoksay */ }
       }
+      R.snapCd = R.units.length > 150 ? .2 : .1;
     }
     /* düğüm farkları: 1 Hz */
     if (tickN % 10 === 0 && (R.nodeAdd.length || R.nodeDel.length || R.nodeCh.size)) {

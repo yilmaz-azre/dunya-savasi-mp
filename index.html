@@ -28,27 +28,66 @@ button.on{background:#0d9488;border-color:#0d9488}
 #zoom{position:fixed;right:8px;top:120px;display:none;flex-direction:column;gap:5px;z-index:5}
 #zoom button{width:40px;padding:0;font-size:20px}
 #mm{position:fixed;right:8px;bottom:200px;width:160px;height:80px;border:2px solid #2a3446;border-radius:12px;z-index:5;background:#2563eb;display:none}
-#lobby{position:fixed;inset:0;background:radial-gradient(circle at 30% 0%,#10243a,#070b12 70%);z-index:20;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
-.card{background:#1a2133;border:1px solid #2a3446;border-radius:22px;padding:24px;width:100%;max-width:460px;max-height:94vh;overflow-y:auto}
-.card h1{font-size:32px}.card h1 b{color:#5eead4}.card h2{font-size:22px;margin-bottom:6px}
-.card p{color:#9fb0c9;font-size:13px;margin:8px 0 14px;line-height:1.5}
-.card label{font-size:12px;color:#9fb0c9;font-weight:700;display:block;margin-top:8px}
-.card input{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3446;background:#0d1117;color:#fff;font-size:15px;margin:5px 0 4px;user-select:text}
-.card button{padding:12px 16px}
-.card .go{background:#0d9488;border-color:#0d9488;width:100%;font-size:15px;margin-top:10px}
+/* ---------- ana menü (lobi) ---------- */
+#lobby{position:fixed;inset:0;z-index:20;overflow-y:auto;padding:22px 16px 30px;background:radial-gradient(1100px 620px at 12% -12%,#0e3f4d55,transparent 62%),radial-gradient(900px 560px at 92% -6%,#16324f66,transparent 58%),#070b12}
+.lwrap{max-width:1000px;margin:0 auto;display:grid;gap:16px}
+.lhero{display:flex;flex-direction:column;gap:9px;padding:8px 4px 2px}
+.lbadge{display:inline-flex;align-items:center;gap:6px;width:max-content;font:800 10px system-ui;letter-spacing:.22em;color:#5eead4;background:#0d94881a;border:1px solid #0d94884d;border-radius:999px;padding:5px 11px}
+.lhero h1{font-size:clamp(30px,5.2vw,46px);line-height:1.02;letter-spacing:-.02em}
+.lhero h1 b{color:#5eead4}
+.lhero p{color:#93a5bd;font-size:14px;line-height:1.55;max-width:600px}
+.lchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.lchip{font-size:11.5px;color:#9fb0c9;background:#0d141d;border:1px solid #1f2b3a;border-radius:999px;padding:5px 10px}
+.lgrid{display:grid;gap:14px;grid-template-columns:1.02fr .98fr;align-items:start}
+@media(max-width:820px){.lgrid{grid-template-columns:1fr}}
+.lstack{display:grid;gap:14px;align-content:start}
+.lcard{background:linear-gradient(180deg,#141d29,#101722);border:1px solid #24303f;border-radius:20px;padding:16px}
+.lcard h2{display:flex;align-items:center;gap:8px;font:800 13px system-ui;letter-spacing:.1em;text-transform:uppercase;color:#dbe4f0}
+.lcard h2 small{margin-left:auto;font:700 11px system-ui;letter-spacing:0;text-transform:none;color:#6b7c93}
+.lcard .sub{font-size:12px;line-height:1.5;color:#7f8ea6;margin:4px 0 12px}
+.lfield{display:grid;gap:5px;margin-bottom:10px;min-width:0}
+.lfield label{font:700 10.5px system-ui;letter-spacing:.09em;text-transform:uppercase;color:#8294ab}
+.lfield input{width:100%;padding:11px 12px;border-radius:11px;border:1px solid #263445;background:#0b1119;color:#eef3f9;font-size:14px;user-select:text;min-height:44px}
+.lfield input:focus{outline:none;border-color:#0d9488;box-shadow:0 0 0 3px #0d948826}
+.lprofile{display:flex;gap:12px;align-items:flex-start}
+.lavatar{flex:0 0 auto;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font:800 22px system-ui;color:#04211f;background:#2dd4bf;box-shadow:inset 0 0 0 1px #ffffff2e;overflow:hidden;margin-top:18px}
+.lavatar img{width:100%;height:100%;object-fit:cover}
+.lfields{flex:1;min-width:0}
+.lrow{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:end}
+.lrow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lrow .lfield{margin-bottom:10px}
+.lrow .lfield input[type=color]{padding:4px;height:44px;cursor:pointer}
+.lswatches{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:14px}
+.lsw{width:26px;height:26px;border-radius:8px;border:2px solid #0b1119;box-shadow:0 0 0 1px #2b3a4f;cursor:pointer;padding:0;min-height:0}
+.lsw.on{box-shadow:0 0 0 2px #5eead4}
+hr{border:0;border-top:1px solid #24303f;margin:14px 0 12px}
+.lgo{width:100%;min-height:48px;font-size:15px;border-radius:13px;background:linear-gradient(180deg,#0fa89a,#0d9488);border:1px solid #0d9488;color:#fff;box-shadow:0 14px 30px -14px #0d9488}
+.lgo:active{transform:translateY(1px)}
+.ljoin{display:flex;gap:8px}
+.ljoin input{flex:1;min-width:0;padding:12px;border-radius:12px;border:1px solid #263445;background:#0b1119;color:#5eead4;font:800 20px/1 ui-monospace,Consolas,monospace;letter-spacing:8px;text-align:center;text-transform:uppercase;user-select:text;min-height:48px}
+.ljoin input:focus{outline:none;border-color:#0d9488;box-shadow:0 0 0 3px #0d948826}
+.ljoin button{flex:0 0 auto;min-width:96px;min-height:48px;border-radius:12px;background:#13314a;border:1px solid #1f4a68;color:#bfe8ff;font-size:14px}
+.rl{display:flex;flex-direction:column;gap:6px;max-height:min(40vh,340px);overflow-y:auto}
+.rl button{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;background:#0d141d;border:1px solid #1f2b3a;border-radius:12px;padding:10px 12px;font-size:13px}
+.rl button span{display:flex;align-items:center;gap:8px;min-width:0}
+.rl button span:last-child{flex:0 0 auto;color:#8fa2bd;font-size:11.5px;font-weight:700}
+.rl b{color:#5eead4;font-family:ui-monospace,Consolas,monospace;letter-spacing:2px}
+.rl .hint{padding:14px 6px}
+.lcard.howto{display:block;padding:14px 16px}
+.howto summary{cursor:pointer;font-weight:800;font-size:13px;color:#5eead4;list-style:none}
+.howto summary::-webkit-details-marker{display:none}
+.howto p{margin:10px 0 0;font-size:12.5px;line-height:1.65;color:#9fb0c9}
+.howto p b{color:#dbe4f0}
+.lfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 4px;color:#5b6b82;font-size:10.5px}
+.lfoot .hint{margin:0;color:#b45309}
+#ver{white-space:nowrap;color:#4c5c72}
+.card{background:#151d29;border:1px solid #24303f;border-radius:20px;padding:24px;width:100%;max-width:430px;margin:10vh auto;text-align:center}
+.card h2{font-size:22px;margin-bottom:8px}
+.card p{color:#9fb0c9;font-size:13px;margin:0 0 16px;line-height:1.5}
+.card .go{background:#0d9488;border-color:#0d9488;width:100%;font-size:15px;min-height:46px}
 .row{display:flex;gap:8px;align-items:flex-end}
 .row>div{flex:1}
-.row button{flex:0 0 auto;min-height:45px}
-.code{font:800 34px/1 ui-monospace,Consolas,monospace;letter-spacing:8px;color:#5eead4;background:#0d1117;border:1px dashed #2a3446;border-radius:14px;padding:16px;text-align:center;margin:8px 0 14px}
-.plist{display:flex;flex-direction:column;gap:6px;margin:8px 0 14px}
-.pl{display:flex;align-items:center;gap:9px;background:#0d1117;border:1px solid #223;border-radius:12px;padding:10px 12px;font-size:14px}
-.pl i{width:12px;height:12px;border-radius:50%;flex:0 0 auto}
-.pl small{margin-left:auto;color:#8fa2bd;font-weight:600}
-.rl{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:38vh;overflow-y:auto}
-.rl button{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:#0d1117;border-color:#223}
-.rl b{color:#5eead4}
-hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
-.hint{color:#7f8ea6;font-size:12px;line-height:1.5;margin-top:10px}
+.hint{color:#b45309;font-size:12px;line-height:1.5}
 #over{position:fixed;inset:0;background:#000b;z-index:15;display:flex;align-items:center;justify-content:center;padding:16px}
 #over .oc{background:#1a2133;border:1px solid #2a3446;border-radius:20px;padding:24px;text-align:center;max-width:380px;width:100%}
 #over h2{font-size:26px;margin-bottom:6px}#over p{color:#9fb0c9;font-size:14px;margin-bottom:16px}
@@ -184,34 +223,70 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;border-rad
 </div></div>
 
 <div id="lobby">
-  <div class="card" id="scrMenu">
-    <h1>DÜNYA <b>SAVAŞI</b></h1>
-    <p>Çok oyunculu • kalıcı odalar • oda kodu ile katıl</p>
-    <label>Oyuncu adı</label><input id="pn" maxlength="16" placeholder="Adın">
-    <label>Ülke adı</label><input id="cn" maxlength="20" placeholder="Ülkenin adı">
-    <label>Ülke rengi</label><input id="cc" type="color" value="#2dd4bf" style="height:46px;padding:4px">
-    <hr>
-    <label>Yeni oda</label>
-    <input id="rn" maxlength="28" placeholder="Oda adı">
-    <div class="row">
-      <div><label>Maks oyuncu</label><input id="rm" type="number" min="2" max="8" value="4"></div>
-      <div><label>AI düşman</label><input id="ra" type="number" min="0" max="3" value="2"></div>
+  <div class="lwrap" id="scrMenu">
+    <header class="lhero">
+      <span class="lbadge">YY STUDIOS • ÇOK OYUNCULU</span>
+      <h1>DÜNYA <b>SAVAŞI</b></h1>
+      <p>Ülkeni kur, işçilerle kaynak topla, ordu üret. Oda koduyla arkadaşlarınla aynı haritada savaş.</p>
+      <div class="lchips">
+        <span class="lchip">⚡ Anında başlar</span>
+        <span class="lchip">🔑 4 haneli oda kodu</span>
+        <span class="lchip">💻 WASD • 📱 dokunmatik</span>
+        <span class="lchip">🤖 AI düşmanlar</span>
+      </div>
+    </header>
+
+    <div class="lgrid">
+      <section class="lcard">
+        <h2>🪖 Savaşçı profili</h2>
+        <div class="sub">Adın ve ülke rengin haritada görünür.</div>
+        <div class="lprofile">
+          <div class="lavatar" id="pav">?</div>
+          <div class="lfields">
+            <div class="lfield"><label for="pn">Oyuncu adı</label><input id="pn" maxlength="16" placeholder="Adın"></div>
+            <div class="lfield"><label for="cn">Ülke adı</label><input id="cn" maxlength="20" placeholder="Ülkenin adı"></div>
+          </div>
+        </div>
+        <div class="lrow">
+          <div class="lfield"><label for="cc">Ülke rengi</label><input id="cc" type="color" value="#2dd4bf"></div>
+          <div class="lswatches" id="swatches"></div>
+        </div>
+        <hr>
+        <h2>⚔️ Yeni savaş</h2>
+        <div class="sub">Oda açılır açılmaz savaş başlar; arkadaşların kodla sonradan katılır.</div>
+        <div class="lfield"><label for="rn">Oda adı</label><input id="rn" maxlength="28" placeholder="Örn. Akşam savaşı"></div>
+        <div class="lrow2">
+          <div class="lfield"><label for="rm">Maks oyuncu</label><input id="rm" type="number" min="2" max="8" value="4"></div>
+          <div class="lfield"><label for="ra">AI düşman</label><input id="ra" type="number" min="0" max="3" value="2"></div>
+        </div>
+        <button id="create" class="lgo">⚔️ Oda Aç ve Savaşa Başla</button>
+      </section>
+
+      <aside class="lstack">
+        <section class="lcard">
+          <h2>🔑 Odaya katıl</h2>
+          <div class="sub">Arkadaşının paylaştığı 4 haneli kodu gir.</div>
+          <div class="ljoin">
+            <input id="jc" maxlength="4" placeholder="K7QP" autocomplete="off" spellcheck="false">
+            <button id="joinCode">Katıl</button>
+          </div>
+        </section>
+        <section class="lcard">
+          <h2>🌐 Açık odalar <small id="roomCount"></small></h2>
+          <div class="sub">Canlı liste — odaya dokunarak katıl.</div>
+          <div class="rl" id="roomList"></div>
+        </section>
+        <details class="lcard howto">
+          <summary>❓ Nasıl oynanır?</summary>
+          <p>1) Adını ve ülkeni yaz, <b>Oda Aç</b> — savaş anında başlar.<br>
+          2) Kod paylaş; arkadaşların aynı haritaya katılır.<br>
+          3) İşçiler kaynak toplar; alt panelden bina, asker ve kamp yönet.<br>
+          4) PC'de <b>WASD</b>/ok tuşları, mobilde sürükle ile gez; ☰ menüsünden kodu kopyala.</p>
+        </details>
+      </aside>
     </div>
-    <button id="create" class="go">⚔️ Oda Aç — savaş hemen başlar</button>
-    <div class="hint">Arkadaşların oda kodunla sonradan katılabilir; geldiklerinde ülkeleri otomatik kurulur.</div>
-    <hr>
-    <label>Oda kodu ile katıl</label>
-    <div class="row"><input id="jc" maxlength="4" placeholder="Örn. K7QP"><button id="joinCode">Katıl</button></div>
-    <div class="rl" id="roomList"></div>
-    <details class="howto">
-      <summary>Nasıl oynanır?</summary>
-      <p>1) Adını yaz, <b>Oda Aç</b> — savaş anında başlar.<br>
-      2) Oda kodunu paylaş; arkadaşların kodla katılır.<br>
-      3) Alt panelden asker, bina ve kamp yönet.<br>
-      4) PC'de <b>WASD</b> / ok tuşları, mobilde sürükle ile gez.</p>
-    </details>
-    <div class="hint" id="lhint"></div>
-    <div id="ver" style="text-align:right;font-size:10px;color:#5b6b82;margin-top:8px">sürüm 2026-11-13b</div>
+
+    <div class="lfoot"><span id="lhint" class="hint"></span><span id="ver">sürüm 2026-11-13c</span></div>
   </div>
 
   <div class="card" id="scrConn" hidden>
@@ -636,6 +711,8 @@ function showLobby(which) {
 function renderRooms(list) {
   const box = $('roomList');
   if (!box) return;
+  const cnt = $('roomCount');
+  if (cnt) cnt.textContent = list.length ? list.length + ' oda' : '';
   if (!list.length) { box.innerHTML = '<div class="hint">Açık oda yok — ilk odayı sen aç.</div>'; return; }
   box.innerHTML = '';
   for (const r of list) {
@@ -657,6 +734,7 @@ function enterGame() {
   $('panel').style.display = 'flex';
   $('mm').style.display = 'block';
   $('zoom').style.display = 'flex';
+  topSig = ''; mmT = 0;
   mode = null; tab = 'build';
   const camp = (S && S.b.find((b) => b[2] === me.team && b[1] === 'camp'));
   if (camp) { cam.x = (camp[4] + .5) * T; cam.y = (camp[5] + .5) * T; }
@@ -878,21 +956,26 @@ function drawMM() {
 
 /* ---------- ana çizim ---------- */
 function draw() {
-  cv.width = innerWidth;
-  cv.height = innerHeight;
+  if (cv.width !== innerWidth || cv.height !== innerHeight) { cv.width = innerWidth; cv.height = innerHeight; }
   const z = cam.z;
+  const vx0 = cam.x - cv.width / 2 / z, vx1 = cam.x + cv.width / 2 / z;
+  const vy0 = cam.y - cv.height / 2 / z, vy1 = cam.y + cv.height / 2 / z;
   cx.save();
   cx.translate(cv.width / 2 - cam.x * z, cv.height / 2 - cam.y * z);
   cx.scale(z, z);
   cx.drawImage(bg, 0, 0);
 
-  { /* dalga animasyonu */
+  if (z >= .7) { /* dalga animasyonu — sadece yakınlaşınca */
     const t0 = performance.now() / 600;
-    const x0 = Math.max(0, (cam.x - cv.width / 2 / z) / T | 0), x1 = Math.min(W - 1, (cam.x + cv.width / 2 / z) / T + 1 | 0);
-    const y0 = Math.max(0, (cam.y - cv.height / 2 / z) / T | 0), y1 = Math.min(H - 1, (cam.y + cv.height / 2 / z) / T + 1 | 0);
+    const x0 = Math.max(0, vx0 / T | 0), x1 = Math.min(W - 1, vx1 / T + 1 | 0);
+    const y0 = Math.max(0, vy0 / T | 0), y1 = Math.min(H - 1, vy1 / T + 1 | 0);
+    let drawn = 0;
     cx.fillStyle = 'rgba(255,255,255,.2)';
-    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
-      if (!isL(x, y) && (x * 7 + y * 3) % 4 === 0) cx.fillRect(x * T + 3 + Math.sin(t0 + x + y) * 1.5, y * T + 7, 6, 1);
+    for (let y = y0; y <= y1 && drawn < 900; y++) for (let x = x0; x <= x1; x++) {
+      if (!isL(x, y) && (x * 7 + y * 3) % 4 === 0) {
+        cx.fillRect(x * T + 3 + Math.sin(t0 + x + y) * 1.5, y * T + 7, 6, 1);
+        if (++drawn >= 900) break;
+      }
     }
   }
 
@@ -913,9 +996,15 @@ function draw() {
 
   if (started && S) {
     const plant = myPlant();
-    for (const n of nodes.values()) if (n.t !== 'uran' || plant) nodeArt(n);
+    for (const n of nodes.values()) {
+      const nx = n.x * T, ny = n.y * T;
+      if (nx < vx0 - T || nx > vx1 + T || ny < vy0 - T || ny > vy1 + T) continue;
+      if (n.t !== 'uran' || plant) nodeArt(n);
+    }
 
     for (const b of S.b) {
+      const bx = b[4] * T, by = b[5] * T;
+      if (bx < vx0 - 4 * T || bx > vx1 + 4 * T || by < vy0 - 4 * T || by > vy1 + 4 * T) continue;
       drawBld(b[1], b[2], b[4], b[5], b[6]);
       const t = b[1], team = b[2];
       if (t === 'camp' || t === 'house') {
@@ -936,6 +1025,7 @@ function draw() {
     for (const u of S.u) {
       const r = rend.get(u[0]);
       if (!r) continue;
+      if (r.x < vx0 - 48 || r.x > vx1 + 48 || r.y < vy0 - 48 || r.y > vy1 + 48) continue;
       drawUnit(u[1], u[2], u[3], (US[u[1]] || { hp: 1 }).hp, r.x, r.y);
     }
 
@@ -947,27 +1037,36 @@ function draw() {
   }
   cx.restore();
 
-  drawMM();
+  const now = performance.now();
+  if (now - mmT > 140) { mmT = now; drawMM(); }
 
-  if (started && S && me) {
+  if (started && S && me && now - topT > 140) {
+    topT = now;
     const res = me.res;
-    $('top').innerHTML =
-      '<span class="nm" style="display:inline-flex;align-items:center;gap:6px">' + yyAva() + '<i style="background:' + (teamMeta.get(me.team) || {}).col + '"></i>' + (yyCrown() ? '❄️👑 ' : '') + (teamMeta.get(me.team) || {}).name + '</span>' +
-      '<span class="gold">Sv ' + me.lv + ' • ' + SN[stageOf(me.lv)] + '</span>' +
-      '<span class="gold">💰 ' + res.para + '</span>' +
-      Object.keys(I).map((k) => '<span class="' + k + '">' + I[k] + ' ' + res[k] + '</span>').join('') +
-      '<span>👥 ' + me.pop + '/' + me.cap + '</span>' +
-      '<span>Kod: ' + (roomInfo ? roomInfo.code : '----') + '</span>';
+    const meta = teamMeta.get(me.team) || {};
+    const sig = [me.lv, me.pop, me.cap, res.para, roomInfo ? roomInfo.code : '', meta.name, ...Object.keys(I).map((k) => res[k])].join('|');
+    if (sig !== topSig) {
+      topSig = sig;
+      $('top').innerHTML =
+        '<span class="nm" style="display:inline-flex;align-items:center;gap:6px">' + yyAva() + '<i style="background:' + meta.col + '"></i>' + (yyCrown() ? '❄️👑 ' : '') + meta.name + '</span>' +
+        '<span class="gold">Sv ' + me.lv + ' • ' + SN[stageOf(me.lv)] + '</span>' +
+        '<span class="gold">💰 ' + res.para + '</span>' +
+        Object.keys(I).map((k) => '<span class="' + k + '">' + I[k] + ' ' + res[k] + '</span>').join('') +
+        '<span>👥 ' + me.pop + '/' + me.cap + '</span>' +
+        '<span>Kod: ' + (roomInfo ? roomInfo.code : '----') + '</span>';
+    }
   }
 }
+let mmT = 0, topT = 0, topSig = '';
 
 let lastT = performance.now();
 (function loop(n) {
   const dt = Math.min(.1, (n - lastT) / 1000);
   lastT = n;
   for (const r of rend.values()) {
-    r.x += (r.tx - r.x) * Math.min(1, dt * 12);
-    r.y += (r.ty - r.y) * Math.min(1, dt * 12);
+    const k = Math.min(1, dt * 16);
+    r.x += (r.tx - r.x) * k;
+    r.y += (r.ty - r.y) * k;
   }
   if (started && keys.size && !gmOpen()) {
     let dx = 0, dy = 0;
@@ -1263,6 +1362,38 @@ $('ovRestart').onclick = () => { cmd({ a: 'restart' }); $('over').hidden = true;
 $('ovWatch').onclick = () => { $('over').hidden = true; };
 $('reload').onclick = () => location.reload();
 
+/* --- profil önizleme + renk seçenekleri --- */
+const SW = ['#2dd4bf', '#ef4444', '#f59e0b', '#a78bfa', '#38bdf8', '#f472b6', '#a3e635', '#fb923c'];
+function paintAvatar() {
+  const av = $('pav');
+  if (!av) return;
+  const nm = $('pn').value.trim();
+  const col = $('cc').value;
+  const pic = (() => { try { return localStorage.getItem('yy_av') || ''; } catch (e) { return ''; } })();
+  av.style.background = col;
+  if (pic) av.innerHTML = '<img src="' + pic + '" alt="">';
+  else av.textContent = nm ? nm.charAt(0).toLocaleUpperCase('tr-TR') : '?';
+}
+function paintSwatches() {
+  const box = $('swatches');
+  if (!box) return;
+  const cur = $('cc').value.toLowerCase();
+  box.textContent = '';
+  for (const c of SW) {
+    const b = document.createElement('button');
+    b.className = 'lsw' + (c.toLowerCase() === cur ? ' on' : '');
+    b.style.background = c;
+    b.title = c;
+    b.onclick = () => { $('cc').value = c; paintSwatches(); paintAvatar(); };
+    box.appendChild(b);
+  }
+}
+['pn', 'cn', 'cc'].forEach((id) => {
+  const el = $(id);
+  if (el) el.addEventListener('input', () => { paintAvatar(); if (id === 'cc') paintSwatches(); });
+});
+paintSwatches();
+
 try {
   const p = JSON.parse(localStorage.getItem('ds_mp_profile') || 'null');
   if (p) {
@@ -1270,16 +1401,16 @@ try {
     if (p.country) $('cn').value = p.country;
     if (p.color) $('cc').value = p.color;
   }
-  const pic = localStorage.getItem('yy_av');
-  if (pic) {
-    const pn = $('pn');
-    pn.style.backgroundImage = 'url(' + pic + ')';
-    pn.style.backgroundSize = '24px 24px';
-    pn.style.backgroundPosition = '10px center';
-    pn.style.backgroundRepeat = 'no-repeat';
-    pn.style.paddingLeft = '44px';
-  }
+  paintSwatches();
+  paintAvatar();
 } catch (e) {}
+
+$('jc').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('joinCode').click(); });
+$('jc').addEventListener('input', () => {
+  const v = $('jc').value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+  if ($('jc').value !== v) $('jc').value = v;
+});
+$('rn').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('create').click(); });
 
 conn();
 </script>
