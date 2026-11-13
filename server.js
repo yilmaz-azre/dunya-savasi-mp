@@ -75,14 +75,14 @@ const US = {
   ship: { hp: 150, sp: 1.8, atk: 15, rg: 6, c: { iron: 25, wood: 20 }, at: 'port', n: 'Savaş Gemisi', water: 1 }
 };
 const TUR = { tower: { r: 7, d: 6 }, bunker: { r: 5, d: 14 }, cannon: { r: 9, d: 20 }, camp: { r: 5, d: 4 } };
-const LV = { soldier: 10, cmd: 10, tank: 30, ship: 15, plant: 100, silo: 100 };
+const LV = { soldier: 1, cmd: 3, tank: 6, ship: 4, plant: 100, silo: 100 };
 const PR = { wood: 1, fish: 1, wheat: 1, stone: 1.5, iron: 3, coal: 2, gold: 4, uran: 15 };
 const TC = ['#2dd4bf', '#ef4444', '#f59e0b', '#a78bfa', '#38bdf8', '#f472b6', '#a3e635', '#fb923c'];
 const AI_NAMES = ['Kuzey Krallığı', 'Doğu İmparatorluğu', 'Batı Cumhuriyeti'];
 const START_RES = () => ({ wood: 80, fish: 50, stone: 50, iron: 0, coal: 0, gold: 20, uran: 0, wheat: 0, para: 60 });
 
 const stageOf = (lv) => (lv >= 100 ? 4 : lv >= 50 ? 3 : lv >= 25 ? 2 : lv >= 10 ? 1 : 0);
-const hostile = (a, b) => a !== b && a !== 9 && b !== 9;
+const hostile = (a, b) => a !== b;
 const walkable = (type, x, y) => (US[type] && US[type].water ? (x >= 0 && y >= 0 && x < W && y < H && !isL(x, y)) : isL(x, y));
 
 /* ---------------- bağlantı bileşenleri + yol bulma ---------------- */
@@ -414,7 +414,7 @@ class Room {
   addAI() {
     const n = this.ais.length;
     const [x, y] = this.spot();
-    const team = 100 + n + 1;
+    const team = 1000 + n + 1;
     const a = { team, name: AI_NAMES[n % AI_NAMES.length], color: TC[(n + 4) % TC.length], alive: true, t: rand(0, 10), wave: rand(40, 70), cx: x, cy: y };
     this.ais.push(a);
     this.addB('camp', team, x, y);
@@ -564,6 +564,11 @@ class Room {
             owner.res[bn.t] += 2;
             if (Math.random() < .4) owner.res.para++;
             owner.xp += 2;
+            while (owner.lv < 100 && owner.xp >= 100 * owner.lv) {
+              owner.xp -= 100 * owner.lv;
+              owner.lv++;
+              send(owner, { t: 'msg', text: 'Seviye atladın: Sv ' + owner.lv, bad: false });
+            }
             if (bn.a <= 0) R.nodeDie(bn);
           }
           u.stk = 0;
@@ -585,7 +590,7 @@ class Room {
       if (u.type === 'thief') {
         let bd = 1e9, tg = null;
         for (const b of R.blds) {
-          if (!(b.team > 0 && b.team < 100)) continue;
+          if (!R.players.some((q) => q.team === b.team)) continue;
           const d = Math.hypot(b.x - u.x, b.y - u.y);
           if (d < bd) { bd = d; tg = b; }
         }
@@ -607,7 +612,12 @@ class Room {
       }
 
       if (st.atk) {
-        const tg = R.near(u);
+        let tg = null;
+        if (u.od) {
+          tg = u.od.tb ? R.blds.find((x) => x.id === u.od.id) : R.units.find((x) => x.id === u.od.id);
+          if (!tg || tg.hp <= 0 || !hostile(u.team, tg.team)) { u.od = null; tg = null; }
+        }
+        if (!tg) tg = R.near(u);
         if (tg) {
           const e = Math.hypot(tg.x - u.x, tg.y - u.y);
           if (e > st.rg) R.move(u, tg.x, tg.y, dt);
@@ -616,9 +626,9 @@ class Room {
             const boost = R.units.some((c) => c.type === 'cmd' && c.team === u.team && Math.hypot(c.x - u.x, c.y - u.y) < 6) ? 1.5 : 1;
             tg.hp -= st.atk * boost;
           }
-        } else if (u.team >= 100 && u.goal) {
+        } else if (u.goal) {
           R.move(u, u.goal.x, u.goal.y, dt);
-        } else if (u.team < 100) {
+        } else {
           const c = R.campOf(u.team);
           if (c && Math.hypot(u.x - c.x, u.y - c.y) > 6) R.move(u, c.x, c.y, dt);
         }
@@ -804,6 +814,36 @@ function doCmd(R, p, m) {
     return flash(p, 'İşçiler: ' + k, false);
   }
 
+  if (m.a === 'order') {
+    const mine = R.units.filter((u) => u.team === p.team && US[u.type] && US[u.type].atk);
+    if (m.k === 'stop') {
+      mine.forEach((u) => { u.od = null; });
+      R.units.forEach((u) => { if (u.team === p.team) u.od = null; });
+      return flash(p, 'Saldırı iptal — birlikler savunmada', false);
+    }
+    if (m.k === 'attack') {
+      if (!mine.length) return flash(p, 'Saldıracak birliğin yok');
+      const tb = m.tb ? 1 : 0, id = m.tid | 0;
+      const tgt = tb ? R.blds.find((b) => b.id === id) : R.units.find((x) => x.id === id);
+      if (!tgt) return flash(p, 'Hedef bulunamadı');
+      if (!hostile(p.team, tgt.team)) return flash(p, 'Kendi tarafına saldıramazsın');
+      mine.forEach((u) => { u.od = { id: tgt.id, tb }; });
+      return flash(p, 'Saldırı emri verildi (' + mine.length + ' birlik)', false);
+    }
+  }
+
+  if (m.a === 'demolish') {
+    const id = m.id | 0;
+    const b = R.blds.find((x) => x.id === id);
+    if (!b || b.team !== p.team) return flash(p, 'Bina bulunamadı');
+    if (b.type === 'camp') return flash(p, 'Kamp yıkılamaz — taşıyabilirsin');
+    const c = BC[b.type] || {};
+    for (const k in c) { const g = Math.round(c[k] * .3); if (g > 0) p.res[k] += g; }
+    R.blds = R.blds.filter((x) => x.id !== id);
+    R.units.forEach((u) => { if (u.od && u.od.tb && u.od.id === id) u.od = null; });
+    return flash(p, 'Bina yıkıldı — kaynağın %30’u geri geldi', false);
+  }
+
   if (m.a === 'camp') {
     const L = p.lv, c = { wood: 15 + 10 * L, stone: 10 + 8 * L, para: 5 + 2 * L };
     if (!R.campOf(p.team)) return flash(p, 'Kamp yok');
@@ -866,7 +906,7 @@ function doCmd(R, p, m) {
   }
 
   if (m.a === 'hire') {
-    if (p.lv < 10) return flash(p, 'Komutan için Kamp Sv 10 gerekli');
+    if (p.lv < 3) return flash(p, 'Komutan için Kamp Sv 3 gerekli');
     const n = R.units.filter((u) => u.team === p.team && u.type === 'cmd').length;
     const mx = Math.floor(p.lv / 10);
     if (n >= mx) return flash(p, 'Komutan sınırı ' + mx);

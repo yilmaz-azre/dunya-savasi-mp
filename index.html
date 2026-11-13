@@ -207,6 +207,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;border-rad
         <div><span class="k"><kbd>Enter</kbd><kbd>Esc</kbd></span><span>sohbet • menüyü kapat</span></div>
       </div>
       <div class="gmtip">🏕️ <b>Kamp:</b> Alt panelde <b>Kamp</b> sekmesi → <b>Taşı</b>, sonra haritada istediğin boş kareye dokun. Seçtiğin kare yeşil çerçeveyle görünür; taşıdıktan sonra 15 sn beklemen gerekir.</div>
+      <div class="gmtip">⚔️ <b>Saldırı:</b> <b>Saldırı</b> sekmesi → <b>Saldır</b> → düşman birim/binaya dokun. <b>Saldırmadan Vazgeç</b> birlikleri savunmaya döndürür. 🗑️ Kendi binana dokunup <b>Yık</b> ile kaynağının %30’unu geri al.</div>
     </div>
     <div class="gmbtns">
       <button id="gmRestart" class="warn" hidden>🔄 Yeniden Başlat</button>
@@ -286,7 +287,7 @@ kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;border-rad
       </aside>
     </div>
 
-    <div class="lfoot"><span id="lhint" class="hint"></span><span id="ver">sürüm 2026-11-13c</span></div>
+    <div class="lfoot"><span id="lhint" class="hint"></span><span id="ver">sürüm 2026-11-13d</span></div>
   </div>
 
   <div class="card" id="scrConn" hidden>
@@ -393,7 +394,7 @@ const US = {
   cmd: { hp: 130, n: 'Komutan', c: { gold: 30, fish: 20 }, at: 'barracks' },
   ship: { hp: 150, n: 'Savaş Gemisi', c: { iron: 25, wood: 20 }, at: 'port' }
 };
-const LV = { soldier: 10, cmd: 10, tank: 30, ship: 15, plant: 100, silo: 100 };
+const LV = { soldier: 1, cmd: 3, tank: 6, ship: 4, plant: 100, silo: 100 };
 const PR = { wood: 1, fish: 1, wheat: 1, stone: 1.5, iron: 3, coal: 2, gold: 4, uran: 15 };
 const TC = ['#2dd4bf', '#ef4444', '#f59e0b', '#a78bfa', '#38bdf8', '#f472b6', '#a3e635', '#fb923c'];
 const SN = ['Köy', 'Kasaba', 'Şehir', 'Büyük Şehir', 'Metropol'];
@@ -403,6 +404,7 @@ const stageOf = (lv) => (lv >= 100 ? 4 : lv >= 50 ? 3 : lv >= 25 ? 2 : lv >= 10 
 /* ---------- durum ---------- */
 let ws = null, myId = null, me = null, S = null, roomInfo = null, started = false;
 let nodes = new Map(), rend = new Map(), mode = null, tab = 'build', overSeen = false;
+let selB = null, delArmId = 0, delArmT = 0, bldT = 0;
 let curRoom = null, retryT = 0;
 const SID = (() => {
   try {
@@ -418,7 +420,6 @@ const clearKeys = () => keys.clear();
 const teamMeta = new Map(); /* team -> {col, name, lv} */
 
 const teamColor = (team) => {
-  if (team === 9) return '#444';
   const m = teamMeta.get(team);
   return m ? m.col : '#888';
 };
@@ -658,6 +659,7 @@ function handle(m) {
     started = true;
     applySnap(m);
     if (first) enterGame();
+    else if (tab === 'bld' && selB && Date.now() - bldT > 1000) { bldT = Date.now(); tabs(); }
     return;
   }
 
@@ -685,7 +687,7 @@ function handle(m) {
 
   if (m.t === 'left') {
     curRoom = null;
-    roomInfo = null; started = false; S = null; me = null; mode = null;
+    roomInfo = null; started = false; S = null; me = null; mode = null; selB = null;
     clearKeys(); setMenu(false);
     nodes.clear(); rend.clear();
     chatLoad(null); setChat(false);
@@ -735,7 +737,7 @@ function enterGame() {
   $('mm').style.display = 'block';
   $('zoom').style.display = 'flex';
   topSig = ''; mmT = 0;
-  mode = null; tab = 'build';
+  mode = null; tab = 'build'; selB = null; delArmId = 0;
   const camp = (S && S.b.find((b) => b[2] === me.team && b[1] === 'camp'));
   if (camp) { cam.x = (camp[4] + .5) * T; cam.y = (camp[5] + .5) * T; }
   tabs();
@@ -1116,7 +1118,8 @@ function disarmPlace() {
 }
 
 function tabs() {
-  const T2 = { build: '🏗️ İnşa', unit: '🪖 Birlik', task: '⛏️ Görev', nuke: '☢️ Nükleer', eco: '💰 Pazar', camp: '🏕️ Kamp', room: '👥 Oda' };
+  const T2 = { atk: '⚔️ Saldırı', build: '🏗️ İnşa', unit: '🪖 Birlik', task: '⛏️ Görev', nuke: '☢️ Nükleer', eco: '💰 Pazar', camp: '🏕️ Kamp', room: '👥 Oda' };
+  if (selB) T2.bld = '🏗️ Bina';
   const tb = $('tabs');
   tb.innerHTML = '';
   for (const k in T2) {
@@ -1137,6 +1140,36 @@ function tabs() {
   };
 
   if (!S || !me) return;
+  if (selB && !S.b.some((b) => b[0] === selB)) { selB = null; if (tab === 'bld') tab = 'build'; }
+
+  if (tab === 'atk') {
+    add('⚔️ Saldır', 'Haritada düşman birim ya da binaya dokun', () => {
+      armPlace('attack', 'Saldırılacak düşman hedefe dokun');
+    }, mode === 'attack');
+    add('🛑 Saldırmadan Vazgeç', 'Tüm birlikler savunmaya döner', () => { disarmPlace(); cmd({ a: 'order', k: 'stop' }); });
+    add('🏗️ Bina Sil', 'Kendi binana dokun → Bina sekmesi → Yık', () => {
+      flash('Silmek için kendi binana dokun', false);
+    });
+  }
+
+  if (tab === 'bld') {
+    const b = selB ? S.b.find((x) => x[0] === selB) : null;
+    if (!b) { tab = 'build'; }
+    else {
+      const ready = !(b[6] > 0);
+      add((BI[b[1]] || '🏠') + ' ' + (BN[b[1]] || b[1]), 'Can ' + Math.round(b[3]) + '/' + Math.round(b[7]) + ' • ' + (ready ? 'Hazır' : 'İnşa ' + b[6] + ' sn'));
+      if (b[1] === 'camp') {
+        add('🏕️ Kamp Yükselt / Taşı', 'Kamp sekmesinden yönet', () => { tab = 'camp'; });
+      } else {
+        const armed = delArmId === b[0] && Date.now() - delArmT < 4000;
+        add(armed ? '⚠️ Emin misin? Yık' : '🗑️ Yık', armed ? 'Tekrar dokun — %30 kaynak geri gelir' : 'Bina silinir • kaynağın %30’u geri gelir', () => {
+          if (!armed) { delArmId = b[0]; delArmT = Date.now(); flash('Silmek için tekrar dokun', true); return; }
+          cmd({ a: 'demolish', id: b[0] });
+          delArmId = 0; selB = null; tab = 'build';
+        });
+      }
+    }
+  }
 
   if (tab === 'build') {
     for (const k in BC) {
@@ -1181,7 +1214,7 @@ function tabs() {
     const L = me.lv;
     const camp = S.b.find((b) => b[2] === me.team && b[1] === 'camp' && !(b[6] > 0));
     if (camp) {
-      add('⭐ Kamp Sv ' + L + ' • ' + SN[stageOf(L)], 'Sv 10 asker/komutan • 15 gemi • 30 tank • 100 nükleer', () => {});
+      add('⭐ Kamp Sv ' + L + ' • ' + SN[stageOf(L)], 'Asker hemen • Komutan Sv3 • Gemi Sv4 • Tank Sv6 • Nükleer Sv100', () => {});
       add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => {
         if (cmd({ a: 'camp' })) waitCamp();
       });
@@ -1236,6 +1269,27 @@ cv.onwheel = (e) => { cam.z = Math.max(.4, Math.min(3, cam.z * (e.deltaY < 0 ? 1
 function tap(px, py) {
   if (!started || !S || !me) return;
   const x = px / T | 0, y = py / T | 0;
+  const tx = px / T, ty = py / T;
+  if (mode === 'attack') {
+    let tgt = null, bd = 1.5;
+    for (const u of S.u) {
+      if (u[2] === me.team) continue;
+      const d = Math.hypot(u[4] - tx, u[5] - ty);
+      if (d < bd) { bd = d; tgt = { id: u[0], tb: 0 }; }
+    }
+    if (!tgt) {
+      for (const b of S.b) {
+        if (b[2] === me.team) continue;
+        const d = Math.hypot(b[4] + .5 - tx, b[5] + .5 - ty);
+        if (d < 1.5) { bd = d; tgt = { id: b[0], tb: 1 }; }
+      }
+    }
+    if (!tgt) return flash('Düşman birim ya da binaya yakın dokun', true);
+    if (cmd({ a: 'order', k: 'attack', tid: tgt.id, tb: tgt.tb })) flash('Saldırı emri gönderildi', false);
+    disarmPlace();
+    tabs();
+    return;
+  }
   if (mode === 'nuke') {
     cmd({ a: 'nuke', x, y });
     disarmPlace();
@@ -1256,7 +1310,17 @@ function tap(px, py) {
     cmd({ a: 'build', k: mode.b, x, y });
     disarmPlace();
     tabs();
+    return;
   }
+  const own = S.b.find((b) => b[2] === me.team && b[4] === x && b[5] === y);
+  if (own) {
+    selB = own[0]; tab = 'bld'; delArmId = 0;
+    const p = $('panel');
+    p.style.display = 'flex';
+    tabs();
+    return;
+  }
+  if (selB) { selB = null; if (tab === 'bld') tab = 'build'; tabs(); }
 }
 
 $('hp').onclick = () => { const p = $('panel'); p.style.display = p.style.display === 'none' ? 'flex' : 'none'; };
