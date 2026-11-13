@@ -658,31 +658,37 @@ function doCmd(R, p, m) {
       }
       return null;
     };
-    let spot;
+    let spot = null, exact = true;
     if (Number.isFinite(m.x) && Number.isFinite(m.y)) {
-      spot = near(m.x | 0, m.y | 0, 3);
+      const ax = m.x | 0, ay = m.y | 0;
+      if (free(ax, ay)) spot = { x: ax, y: ay };
+      else {
+        spot = near(ax, ay, 1);
+        exact = false;
+        if (!spot) return flash(p, 'Burası dolu ya da deniz — boş bir kareye dokun', true);
+      }
     } else {
       const own = R.units.filter((u) => u.team === p.team).concat(R.blds.filter((b) => b.team === p.team));
       const ax = own.length ? Math.round(own.reduce((s, u) => s + u.x, 0) / own.length) : W >> 1;
       const ay = own.length ? Math.round(own.reduce((s, u) => s + u.y, 0) / own.length) : H >> 1;
       spot = near(ax, ay, 14);
+      if (!spot) return flash(p, 'Kamp için boş kara bulunamadı', true);
     }
-    if (!spot) return flash(p, 'Kamp için boş kara bulunamadı');
     if (camp) {
-      if (now - (p.campAt || 0) < 60000) {
-        const left = Math.ceil((60000 - (now - (p.campAt || 0))) / 1000);
-        return flash(p, 'Kampı ' + left + ' sn sonra taşıyabilirsin');
+      if (now - (p.campAt || 0) < 15000) {
+        const left = Math.ceil((15000 - (now - (p.campAt || 0))) / 1000);
+        return flash(p, 'Kampı ' + left + ' sn sonra taşıyabilirsin', true);
       }
       const cost = { wood: 40, stone: 20, para: 25 };
-      if (!R.can(p, cost)) return flash(p, 'Kaynak yetersiz (🌲40 🪨20 💰25)');
+      if (!R.can(p, cost)) return flash(p, 'Kaynak yetersiz (🌲40 🪨20 💰25)', true);
       R.pay(p, cost);
       camp.x = spot.x; camp.y = spot.y; camp.hp = camp.mh;
       p.campAt = now;
-      return flash(p, 'Kamp taşındı', false);
+      return flash(p, exact ? 'Kamp taşındı' : 'Kamp yanındaki boş kareye taşındı', false);
     }
     R.addB('camp', p.team, spot.x, spot.y);
     p.campAt = now;
-    return flash(p, 'Kamp kuruldu', false);
+    return flash(p, exact ? 'Kamp kuruldu' : 'Kamp yanındaki boş kareye kuruldu', false);
   }
 
   if (m.a === 'hire') {
