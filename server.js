@@ -826,7 +826,9 @@ wss.on('connection', (ws) => {
       if (rooms.size >= 60) return ws.send(JSON.stringify({ t: 'err', text: 'Sunucu dolu, sonra dene.' }));
       const R = new Room(m.rname || m.name, m.max || 0, m.ai || 0);
       rooms.set(R.code, R);
-      if (!attach(ws, R, m)) { rooms.delete(R.code); }
+      if (!attach(ws, R, m)) { rooms.delete(R.code); return; }
+      R.start();
+      pushRooms();
       return;
     }
 
@@ -834,7 +836,8 @@ wss.on('connection', (ws) => {
       if (ws.room) return;
       const R = rooms.get(String(m.code || '').toUpperCase().trim());
       if (!R) return ws.send(JSON.stringify({ t: 'err', text: 'Oda bulunamadı.' }));
-      attach(ws, R, m);
+      const p = attach(ws, R, m);
+      if (p && !R.started) { R.start(); pushRooms(); }
       return;
     }
 
@@ -875,13 +878,12 @@ wss.on('connection', (ws) => {
 
     if (m.t === 'cmd') {
       if (m.a === 'restart') {
-        if (!R.over) return;
+        if (!R.over) return flash(p, 'Oyun henüz bitmedi.');
         const keep = R.players;
         R.hardReset();
         R.players = keep;
-        for (const q of keep) { q.alive = true; q.res = START_RES(); q.lv = 1; q.xp = 0; }
-        R.bcast({ t: 'reset' });
-        R.bcast({ t: 'room', room: R.info() });
+        for (const q of keep) { q.alive = true; q.res = START_RES(); q.lv = 1; q.xp = 0; q.cmdWin = []; q.campAt = 0; }
+        R.start();
         pushRooms();
         return;
       }
