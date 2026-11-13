@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Dünya Savaşı — Çok Oyunculu</title>
 <script>window.__yyPill=false;</script>
 <script>/* YY Studios profil koprusu */(function(){try{var q=new URLSearchParams(location.search),n=q.get("name"),av=q.get("av"),cr=q.get("crown");if(n){n=n.trim().replace(/\s+/g," ").slice(0,18);["bt_nm","cas_name","ulke_name"].forEach(function(k){try{localStorage.setItem(k,n)}catch(e){}});try{var pr=JSON.parse(localStorage.getItem("ds_mp_profile")||"{}");pr.name=n;localStorage.setItem("ds_mp_profile",JSON.stringify(pr))}catch(e){}}if(av&&/^data:image\//.test(av)){try{localStorage.setItem("yy_av",av)}catch(e){}}if(cr==="1"){try{localStorage.setItem("yy_crown","1")}catch(e){}}}catch(e){}})();</script>
@@ -115,6 +118,7 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
     <div class="row"><input id="jc" maxlength="4" placeholder="Örn. K7QP"><button id="joinCode">Katıl</button></div>
     <div class="rl" id="roomList"></div>
     <div class="hint" id="lhint"></div>
+    <div id="ver" style="text-align:right;font-size:10px;color:#5b6b82;margin-top:8px">sürüm 2026-11-12e</div>
   </div>
 
   <div class="card" id="scrRoom" hidden>
@@ -240,6 +244,14 @@ const stageOf = (lv) => (lv >= 100 ? 4 : lv >= 50 ? 3 : lv >= 25 ? 2 : lv >= 10 
 /* ---------- durum ---------- */
 let ws = null, myId = null, me = null, S = null, roomInfo = null, started = false;
 let nodes = new Map(), rend = new Map(), mode = null, tab = 'build', overSeen = false;
+let curRoom = null, retryT = 0;
+const SID = (() => {
+  try {
+    let s = localStorage.getItem('ds_sid');
+    if (!s) { s = 's' + Math.random().toString(36).slice(2, 10); localStorage.setItem('ds_sid', s); }
+    return s;
+  } catch (e) { return 's' + Math.random().toString(36).slice(2, 10); }
+})();
 const cam = { x: W * T / 2, y: H * T / 2.1, z: 1.15 };
 const teamMeta = new Map(); /* team -> {col, name, lv} */
 
@@ -257,16 +269,28 @@ const myPlant = () => !!(S && S.b.some((b) => b[2] === me.team && b[1] === 'plan
 /* ---------- ağ ---------- */
 function conn() {
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  ws = new WebSocket(proto + '//' + location.host);
+  try { ws = new WebSocket(proto + '//' + location.host); } catch (e) { scheduleReconnect(); return; }
   ws.onopen = () => {
-    $('lobby').style.display = '';
-    $('lhint').textContent = '';
+    retryT = 0;
+    if (curRoom) {
+      $('scrConn').hidden = false;
+      $('scrMenu').hidden = true;
+      $('scrRoom').hidden = true;
+      $('connText').textContent = 'Oyuna yeniden bağlanılıyor…';
+      const d = profile();
+      send({ t: 'join', code: curRoom, name: d.name, country: d.country, color: d.color, sid: SID });
+    } else {
+      $('scrConn').hidden = true;
+      $('lobby').style.display = '';
+      $('lhint').textContent = '';
+    }
   };
   ws.onclose = () => {
     $('scrMenu').hidden = true;
     $('scrRoom').hidden = true;
     $('scrConn').hidden = false;
-    $('connText').textContent = 'Sunucu bağlantısı koptu.';
+    $('connText').textContent = curRoom ? 'Bağlantı koptu, oyuna yeniden bağlanılıyor…' : 'Sunucu bağlantısı koptu, yeniden deniyorum…';
+    scheduleReconnect();
   };
   ws.onerror = () => {};
   ws.onmessage = (e) => {
@@ -275,8 +299,25 @@ function conn() {
     handle(m);
   };
 }
-const send = (o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
+function scheduleReconnect() {
+  if (retryT) return;
+  retryT = setTimeout(() => { retryT = 0; conn(); }, 1800);
+}
+const send = (o) => {
+  if (ws && ws.readyState === 1) { ws.send(JSON.stringify(o)); return true; }
+  flash('Bağlantı yok — yeniden bağlanılıyor…', true);
+  scheduleReconnect();
+  return false;
+};
 const cmd = (o) => send(Object.assign({ t: 'cmd' }, o));
+let campWait = 0;
+function waitCamp() {
+  clearTimeout(campWait);
+  campWait = setTimeout(() => {
+    flash('Sunucudan yanıt gelmedi — bağlantı yenileniyor…', true);
+    if (ws) { try { ws.close(); } catch (e) {} }
+  }, 4000);
+}
 
 function flash(text, bad) {
   const el = $('msg');
@@ -406,11 +447,22 @@ function lerr(text) {
 
 function handle(m) {
   if (m.t === 'rooms') return renderRooms(m.list);
-  if (m.t === 'err') return lerr(m.text);
+  if (m.t === 'err') {
+    lerr(m.text);
+    if (curRoom && /Oda bulunamadı/.test(m.text)) {
+      curRoom = null;
+      showLobby('menu');
+      $('lhint').textContent = 'Oda kapanmış. Yeni oda kur ya da kodla katıl.';
+    }
+    return;
+  }
 
   if (m.t === 'joined') {
     myId = m.me.id;
     roomInfo = m.room;
+    curRoom = m.room.code;
+    clearTimeout(campWait);
+    $('scrConn').hidden = true;
     started = !!m.started;
     overSeen = false;
     chatLoad(m.room.code, m.chat);
@@ -460,6 +512,7 @@ function handle(m) {
   }
 
   if (m.t === 'msg') {
+    clearTimeout(campWait);
     flash(m.text, m.bad);
     if (!m.bad && /Kamp kuruldu|Kamp taşındı/.test(m.text)) {
       disarmPlace();
@@ -475,6 +528,7 @@ function handle(m) {
   }
 
   if (m.t === 'left') {
+    curRoom = null;
     roomInfo = null; started = false; S = null; me = null;
     nodes.clear(); rend.clear();
     chatLoad(null); setChat(false);
@@ -899,15 +953,19 @@ function tabs() {
     const camp = S.b.find((b) => b[2] === me.team && b[1] === 'camp' && !(b[6] > 0));
     if (camp) {
       add('⭐ Kamp Sv ' + L + ' • ' + SN[stageOf(L)], 'Sv 10 asker/komutan • 15 gemi • 30 tank • 100 nükleer', () => {});
-      add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => cmd({ a: 'camp' }));
+      add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => {
+        if (cmd({ a: 'camp' })) waitCamp();
+      });
       add('🚚 Kampı Taşı', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
         armPlace('campPlace', 'Kampı taşımak için haritada boş bir kareye dokun');
       }, mode === 'campPlace');
+      add('⚡ Kampı Hemen Taşı', '🌲40 🪨20 💰25 • boş araziye kendisi taşınır', () => {
+        if (cmd({ a: 'campPlace' })) { flash('Kamp taşınıyor…', false); waitCamp(); }
+      });
     } else {
       add('⛔ Kamp yok', 'Kaybettin — hemen ücretsiz kur', () => {});
       add('🏕️ Kamp Kur (hemen)', 'Ücretsiz • en yakın boş araziye kurulur', () => {
-        cmd({ a: 'campPlace' });
-        flash('Kamp kuruluyor…', false);
+        if (cmd({ a: 'campPlace' })) { flash('Kamp kuruluyor…', false); waitCamp(); }
       });
       add('📍 Yer seçerek kur', 'Haritada boş kare seç', () => {
         armPlace('campPlace', 'Kamp kurmak için haritada boş bir kareye dokun');
@@ -956,8 +1014,7 @@ function tap(px, py) {
     return;
   }
   if (mode === 'campPlace') {
-    cmd({ a: 'campPlace', x, y });
-    flash('Kamp yeri gönderildi…', false);
+    if (cmd({ a: 'campPlace', x, y })) { flash('Kamp yeri gönderildi…', false); waitCamp(); }
     return;
   }
   if (mode && mode.b) {
