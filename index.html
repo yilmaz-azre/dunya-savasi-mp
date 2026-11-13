@@ -55,24 +55,57 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
 #over button{margin:4px;background:#0d9488;border-color:#0d9488}
 #over button.alt{background:#2c3a52;border-color:#2a3446}
 /* ---------- oyun menüsü ---------- */
-#gm{position:fixed;inset:0;background:#000b;z-index:13;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
-.gmcard{width:min(460px,100%);max-height:88vh;overflow-y:auto;background:#141b26;border:1px solid #2a3446;border-radius:18px;padding:16px;display:grid;gap:10px;box-shadow:0 30px 70px -20px #000}
-.gmhead{display:flex;align-items:center;justify-content:space-between;gap:8px;font:800 13px system-ui;letter-spacing:.06em}
-.gmcode{display:flex;align-items:center;gap:10px;background:#0d1117;border:1px dashed #2a3446;border-radius:12px;padding:10px 12px;font-size:12px;color:#9fb0c9}
-.gmcode b{font:800 22px/1 ui-monospace,Consolas,monospace;letter-spacing:6px;color:#5eead4}
-.gmcode .xbtn{margin-left:auto;font-size:11px;padding:0 10px}
-.gmsec{font:800 10px system-ui;letter-spacing:.16em;text-transform:uppercase;color:#7f8ea6;margin-top:2px}
-.gmhelp{display:grid;gap:5px;font-size:12.5px;color:#cfd8e6;line-height:1.45}
-.gmp{display:grid;gap:5px}
-.gmp .pl{padding:8px 10px;font-size:13px}
-.gmbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.gmbtns button{flex:1;min-width:120px}
-.xbtn{min-height:34px;border-radius:9px;background:#1f2a3d;border:1px solid #2a3446;color:#e8ecf4;font-weight:700;font-size:13px;padding:0 8px}
-.gmbtns .alt{background:#2c3a52;border-color:#2a3446}
+#gm{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:14px;background:radial-gradient(120% 80% at 50% 0%,rgba(13,148,136,.16),transparent 60%),rgba(4,8,14,.76)}
+.gmcard{width:min(520px,100%);max-height:min(90vh,780px);display:flex;flex-direction:column;background:linear-gradient(180deg,#18222f,#101823);border:1px solid #2c3c52;border-radius:22px;overflow:hidden;box-shadow:0 30px 80px -20px #000,inset 0 1px 0 #ffffff12}
+.grab{display:none}
+.gmhead{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(180deg,#1b2634,#151e2a);border-bottom:1px solid #24303f}
+.gmava{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;background:linear-gradient(135deg,#0d9488,#0e7490);box-shadow:0 8px 20px -8px #0d9488}
+.gmttl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gmttl b{font:800 13px/1 system-ui;letter-spacing:.14em;color:#eef3f9}
+.gmttl small{font-size:11px;color:#7f8ea6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gmhead .xbtn{margin-left:auto}
+.gmbody{padding:14px 16px;display:grid;gap:12px;overflow-y:auto;overscroll-behavior:contain}
+.gmcode{background:#0b1119;border:1px solid #26364a;border-radius:16px;padding:12px 14px}
+.gmcode .lbl{font:800 10px system-ui;letter-spacing:.18em;color:#6f8098}
+.gmcode .row{display:flex;align-items:center;gap:10px;margin-top:4px}
+.gmcode b{font:800 26px/1 ui-monospace,Consolas,monospace;letter-spacing:8px;color:#5eead4}
+.gmcode button{margin-left:auto;min-height:34px;font-size:12px;background:#123047;border:1px solid #1f4a68;color:#bfe8ff;border-radius:9px;padding:0 12px}
+.gmcode .hint{font-size:11px;color:#6f8098;margin-top:7px}
+.gmsec{display:flex;align-items:center;gap:8px;font:800 10px system-ui;letter-spacing:.16em;text-transform:uppercase;color:#7f8ea6}
+.gmsec small{margin-left:auto;font:700 11px system-ui;letter-spacing:0;text-transform:none;color:#5f7288}
+.gmp{display:grid;gap:6px}
+.gmp .pl{display:flex;align-items:center;gap:9px;background:#0d141d;border:1px solid #1f2b3a;border-radius:12px;padding:9px 11px;font-size:13px}
+.gmp .pl i{width:10px;height:10px;border-radius:3px;flex:0 0 auto;box-shadow:0 0 0 2px #ffffff14}
+.gmp .pl b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gmp .pl small{margin-left:auto;display:flex;align-items:center;gap:6px;color:#8fa2bd;font-weight:600;font-size:11px;flex:0 0 auto}
+.gmp .pl .tag{font:800 9px system-ui;letter-spacing:.08em;padding:2px 6px;border-radius:6px;background:#0d9488;color:#04211f}
+.gmp .pl .tag.off{background:#22303f;color:#8fa2bd}
+.gmp .pl.me{border-color:#0d9488;background:#0d1f21}
+.gmkeys{display:grid;gap:6px}
+.gmkeys div{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#c3cede;background:#0d141d;border:1px solid #1f2b3a;border-radius:10px;padding:7px 10px}
+.gmkeys .k{display:flex;gap:3px;min-width:112px}
+kbd{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:6px;background:#1c2a3b;border:1px solid #2f435c;border-bottom-width:2px;font:700 10px system-ui;color:#cfe6ff;padding:0 4px}
+.gmtip{display:flex;gap:8px;font-size:12px;line-height:1.55;color:#b9c6d8;background:#0e1a17;border:1px solid #173b34;border-radius:12px;padding:10px 12px}
+.gmtip b{color:#5eead4}
+.gmbtns{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#0e151f;border-top:1px solid #24303f}
+.gmbtns button{flex:1;min-height:44px;border-radius:12px;font-size:13px}
+.gmbtns .primary{background:#0d9488;border-color:#0d9488;box-shadow:0 10px 24px -10px #0d9488}
+.gmbtns .danger{background:#2a1b20;border-color:#5b2733;color:#ffc9d2}
+.gmbtns .warn{background:#4a3413;border-color:#7a5312;color:#ffe1a3}
+.gmbtns button[hidden]{display:none}
+.xbtn{min-height:34px;border-radius:10px;background:#1f2a3d;border:1px solid #2a3446;color:#e8ecf4;font-weight:700;font-size:13px;padding:0 10px}
 .howto{margin-top:10px;background:#0d1117;border:1px solid #223;border-radius:12px;padding:10px 12px;font-size:12px;color:#9fb0c9}
 .howto summary{cursor:pointer;font-weight:700;color:#5eead4}
 .howto p{margin:8px 0 0;line-height:1.6}
-@media(max-width:560px){#gm{align-items:flex-end;padding:0}.gmcard{width:100%;max-height:86vh;border-radius:18px 18px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom))}}
+@media(max-width:560px){
+  #gm{align-items:flex-end;padding:0;background:rgba(4,8,14,.82)}
+  .gmcard{width:100%;max-height:92vh;border-radius:22px 22px 0 0;border-bottom:0}
+  .grab{display:block;width:44px;height:4px;border-radius:3px;background:#33465c;margin:8px auto 0}
+  .gmhead{padding:10px 14px 12px}
+  .gmbody{padding:12px 14px}
+  .gmcode b{font-size:24px;letter-spacing:6px}
+  .gmkeys .k{min-width:98px}
+}
 /* ---------- sohbet ---------- */
 #zoom #chatTgl{position:relative;font-size:18px}
 #chatBadge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:9px;font:700 10px/1.4 system-ui;padding:0 5px;min-width:16px}
@@ -112,27 +145,34 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
 </div>
 
 <div id="gm" hidden>
-  <div class="gmcard">
-    <div class="gmhead"><b>☰ OYUN MENÜSÜ</b><button id="gmClose" class="xbtn" title="Kapat (Esc)">✕</button></div>
-    <div class="gmcode">Oda kodu <b id="gmcode">----</b><button id="gmcopy" class="xbtn">Kopyala</button></div>
-    <div class="gmsec">Oyuncular</div>
-    <div id="gmplayers" class="gmp"></div>
-    <div class="gmsec">Kontroller</div>
-    <div class="gmhelp">
-      <div>🖥️ <b>WASD</b> veya ok tuşları — haritada gez</div>
-      <div>🖱️ Sürükle — gez • Tekerlek — yakınlaş</div>
-      <div>📱 Sürükle — gez • İki parmak — yakınlaş</div>
-      <div>⌨️ Enter — sohbet • Esc — kapat</div>
+  <div class="gmcard" role="dialog" aria-modal="true" aria-label="Oyun menüsü">
+    <div class="grab"></div>
+    <div class="gmhead">
+      <div class="gmava">⚔️</div>
+      <div class="gmttl"><b>OYUN MENÜSÜ</b><small id="gmroom">Oda bağlanıyor…</small></div>
+      <button id="gmClose" class="xbtn" title="Kapat (Esc)">✕</button>
     </div>
-    <div class="gmsec">Kamp</div>
-    <div class="gmhelp">
-      <div>🏕️ Alt paneldeki <b>Kamp</b> sekmesinden yükselt veya taşı.</div>
-      <div>Kampın yoksa <b>ücretsiz</b> yeniden kurulur.</div>
+    <div class="gmbody">
+      <div class="gmcode">
+        <div class="lbl">ODA KODU</div>
+        <div class="row"><b id="gmcode">----</b><button id="gmcopy">📋 Kopyala</button></div>
+        <div class="hint">Arkadaşların bu kodla aynı savaşa katılır</div>
+      </div>
+      <div class="gmsec">👥 Oyuncular <small id="gmcount"></small></div>
+      <div id="gmplayers" class="gmp"></div>
+      <div class="gmsec">🎮 Kontroller</div>
+      <div class="gmkeys">
+        <div><span class="k"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>ok tuşları da olur — haritada gez</span></div>
+        <div><span class="k"><kbd>🖱️</kbd><kbd>⬍</kbd></span><span>sürükle gez • tekerlek yakınlaş</span></div>
+        <div><span class="k"><kbd>📱</kbd><kbd>🤏</kbd></span><span>sürükle gez • iki parmak yakınlaş</span></div>
+        <div><span class="k"><kbd>Enter</kbd><kbd>Esc</kbd></span><span>sohbet • menüyü kapat</span></div>
+      </div>
+      <div class="gmtip">🏕️ <b>Kamp:</b> Alt panelde <b>Kamp</b> sekmesi → <b>Taşı</b>, sonra haritada istediğin boş kareye dokun. Seçtiğin kare yeşil çerçeveyle görünür; taşıdıktan sonra 15 sn beklemen gerekir.</div>
     </div>
     <div class="gmbtns">
-      <button id="gmRestart" hidden>🔄 Yeniden Başlat</button>
-      <button id="gmLeave" class="alt">🚪 Odadan Ayrıl</button>
-      <button id="gmResume" class="alt">▶ Devam</button>
+      <button id="gmRestart" class="warn" hidden>🔄 Yeniden Başlat</button>
+      <button id="gmLeave" class="danger">🚪 Ayrıl</button>
+      <button id="gmResume" class="primary">▶ Oyuna Dön</button>
     </div>
   </div>
 </div>
@@ -171,7 +211,7 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
       4) PC'de <b>WASD</b> / ok tuşları, mobilde sürükle ile gez.</p>
     </details>
     <div class="hint" id="lhint"></div>
-    <div id="ver" style="text-align:right;font-size:10px;color:#5b6b82;margin-top:8px">sürüm 2026-11-13a</div>
+    <div id="ver" style="text-align:right;font-size:10px;color:#5b6b82;margin-top:8px">sürüm 2026-11-13b</div>
   </div>
 
   <div class="card" id="scrConn" hidden>
@@ -186,6 +226,7 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
 
 /* ---------- harita ---------- */
 const $ = (i) => document.getElementById(i);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function yyPic() { try { return localStorage.getItem('yy_av') || ''; } catch (e) { return ''; } }
 function yyName() {
   try { return localStorage.getItem('cas_name') || localStorage.getItem('ulke_name') || localStorage.getItem('bt_nm') || ''; }
@@ -554,7 +595,7 @@ function handle(m) {
   if (m.t === 'msg') {
     clearTimeout(campWait);
     flash(m.text, m.bad);
-    if (!m.bad && /Kamp kuruldu|Kamp taşındı/.test(m.text)) {
+    if (!m.bad && /Kamp (kuruldu|taşındı)|Kamp yanındaki/.test(m.text)) {
       disarmPlace();
       tabs();
     }
@@ -599,7 +640,7 @@ function renderRooms(list) {
   box.innerHTML = '';
   for (const r of list) {
     const b = document.createElement('button');
-    b.innerHTML = '<span><b>' + r.code + '</b> ' + r.name + '</span><span>' + r.players + '/' + r.max + (r.started ? ' • oyunda' : '') + '</span>';
+    b.innerHTML = '<span><b>' + esc(r.code) + '</b> ' + esc(r.name) + '</span><span>' + (r.players | 0) + '/' + (r.max | 0) + (r.started ? ' • oyunda' : '') + '</span>';
     b.onclick = () => joinRoom(r.code);
     box.appendChild(b);
   }
@@ -628,12 +669,28 @@ function enterGame() {
 function gmOpen() { return !$('gm').hidden; }
 function paintMenu() {
   $('gmcode').textContent = roomInfo ? roomInfo.code : '----';
+  const list = roomInfo && roomInfo.players ? roomInfo.players : [];
+  $('gmroom').textContent = roomInfo ? (roomInfo.name || 'Oda') + ' • kod ' + roomInfo.code : 'Oda bağlanıyor…';
+  $('gmcount').textContent = list.length ? list.length + ' oyuncu' : '';
   const box = $('gmplayers');
-  box.innerHTML = '';
-  if (roomInfo) for (const p of roomInfo.players) {
+  box.textContent = '';
+  for (const p of list) {
+    const mine = me && p.i === me.team;
     const d = document.createElement('div');
-    d.className = 'pl';
-    d.innerHTML = '<i style="background:' + p.col + '"></i>' + p.c + ' <small>' + (p.n || '') + (p.on ? '' : ' • çevrimdışı') + '</small>';
+    d.className = 'pl' + (mine ? ' me' : '');
+    const dot = document.createElement('i');
+    dot.style.background = /^#[0-9a-f]{6}$/i.test(p.col || '') ? p.col : '#64748b';
+    const nm = document.createElement('b');
+    nm.textContent = p.c || 'Ülke';
+    const sm = document.createElement('small');
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = mine ? 'SEN' : (p.on ? 'AÇIK' : 'KAPALI');
+    if (!mine && !p.on) tag.classList.add('off');
+    const pl = document.createElement('span');
+    pl.textContent = p.n || 'Oyuncu';
+    sm.append(pl, tag);
+    d.append(dot, nm, sm);
     box.appendChild(d);
   }
   $('gmRestart').hidden = !(S && S.over);
@@ -839,6 +896,17 @@ function draw() {
     }
   }
 
+  if (mode === 'campPlace' && placeMark) {
+    const px = placeMark.x * T, py = placeMark.y * T;
+    cx.fillStyle = placeMark.ok ? 'rgba(52,211,153,.28)' : 'rgba(248,113,113,.3)';
+    cx.strokeStyle = placeMark.ok ? '#34d399' : '#f87171';
+    cx.lineWidth = 2 / z;
+    cx.fillRect(px, py, T, T);
+    cx.strokeRect(px + 1, py + 1, T - 2, T - 2);
+    cx.font = 'bold ' + Math.round(18 / z) + 'px sans-serif';
+    cx.fillText(placeMark.ok ? '🏕️' : '✖', px + T / 2, py + T / 2 - 3 / z);
+  }
+
   cx.textAlign = 'center';
   cx.textBaseline = 'middle';
   cx.font = '11px sans-serif';
@@ -923,6 +991,15 @@ const affordable = (c) => me && Object.keys(c).every((k) => me.res[k] >= c[k]);
 const hasB = (type) => !!(S && S.b.some((b) => b[2] === me.team && b[1] === type && !(b[6] > 0)));
 
 let placeChatOpen = false;
+let placeMark = null;
+
+function campFree(x, y) {
+  if (!isL(x, y)) return false;
+  for (const n of nodes.values()) if (n.x === x && n.y === y) return false;
+  if (S) for (const b of S.b) if (b[4] === x && b[5] === y) return false;
+  return true;
+}
+
 function armPlace(m, hint) {
   placeChatOpen = chatOn;
   if (chatOn) setChat(false);
@@ -934,6 +1011,7 @@ function disarmPlace() {
   const back = placeChatOpen && innerWidth >= 900 && started;
   placeChatOpen = false;
   mode = null;
+  placeMark = null;
   cv.style.cursor = '';
   if (back) setChat(true);
 }
@@ -1008,7 +1086,7 @@ function tabs() {
       add('🏕️ Kampı Yükselt', '🌲' + (15 + 10 * L) + ' 🪨' + (10 + 8 * L) + ' 💰' + (5 + 2 * L), () => {
         if (cmd({ a: 'camp' })) waitCamp();
       });
-      add('🚚 Kampı Taşı', '🌲40 🪨20 💰25 • haritada boş kare seç', () => {
+      add('🚚 Kampı Taşı', '🌲40 🪨20 💰25 • haritada istediğin kareye dokun', () => {
         armPlace('campPlace', 'Kampı taşımak için haritada boş bir kareye dokun');
       }, mode === 'campPlace');
       add('⚡ Kampı Hemen Taşı', '🌲40 🪨20 💰25 • boş araziye kendisi taşınır', () => {
@@ -1026,9 +1104,9 @@ function tabs() {
   }
 
   if (tab === 'room') {
-    add('🔑 Oda kodu: ' + (roomInfo ? roomInfo.code : '----'), roomInfo ? roomInfo.name : '', () => {});
+    add('🔑 Oda kodu: ' + (roomInfo ? esc(roomInfo.code) : '----'), roomInfo ? esc(roomInfo.name) : '', () => {});
     for (const p of (S.p || [])) {
-      add((p.alive ? '🟢' : '💀') + ' ' + p.c, p.n + ' • Sv ' + p.lv + ' • 👥' + p.pop + '/' + p.cap, () => {
+      add((p.alive ? '🟢' : '💀') + ' ' + esc(p.c), esc(p.n) + ' • Sv ' + (p.lv | 0) + ' • 👥' + (p.pop | 0) + '/' + (p.cap | 0), () => {
         cam.x = W * T / 2; cam.y = H * T / 2;
       });
     }
@@ -1047,7 +1125,7 @@ cv.onpointerdown = (e) => {
 cv.onpointermove = (e) => {
   if (!pd) return;
   const dx = e.clientX - pd.x, dy = e.clientY - pd.y;
-  if (Math.hypot(dx, dy) > (mode ? 22 : 8)) pd.m = 1;
+  if (Math.hypot(dx, dy) > (mode ? 12 : 8)) pd.m = 1;
   if (pd.m) { cam.x = pd.cx - dx / cam.z; cam.y = pd.cy - dy / cam.z; }
 };
 cv.onpointerup = (e) => {
@@ -1066,7 +1144,13 @@ function tap(px, py) {
     return;
   }
   if (mode === 'campPlace') {
-    if (cmd({ a: 'campPlace', x, y })) { flash('Kamp yeri gönderildi…', false); waitCamp(); }
+    const ok = campFree(x, y);
+    placeMark = { x, y, ok };
+    if (!ok) {
+      flash('Burası deniz ya da dolu — boş bir kareye dokun', true);
+      return;
+    }
+    if (cmd({ a: 'campPlace', x, y })) { flash('Kamp taşınıyor…', false); waitCamp(); }
     return;
   }
   if (mode && mode.b) {
