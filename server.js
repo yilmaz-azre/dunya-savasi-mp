@@ -159,6 +159,7 @@ class Room {
 
     const p = {
       id: nextPid++, ws,
+      sid: String(d.sid || '').slice(0, 40),
       name: String(d.name || 'Oyuncu').slice(0, 16),
       country: String(d.country || 'Kara birliği').slice(0, 20),
       color,
@@ -578,11 +579,12 @@ function flash(p, text, bad) {
 }
 
 function doCmd(R, p, m) {
-  if (!R.started || R.over) return;
+  if (!R.started) return flash(p, 'Oyun henüz başlamadı.');
+  if (R.over) return flash(p, 'Oyun bitti — yeniden başlatın.');
   if (!p.alive) return flash(p, 'Elendin, izliyorsun.');
   const now = Date.now();
   p.cmdWin = p.cmdWin.filter((t) => now - t < 1000);
-  if (p.cmdWin.length > 25) return;
+  if (p.cmdWin.length > 25) return flash(p, 'Çok hızlı — bir saniye bekle.');
   p.cmdWin.push(now);
 
   if (m.a === 'build') {
@@ -771,7 +773,18 @@ function pushRooms() {
 }
 
 function attach(ws, R, d) {
-  const p = R.addPlayer(ws, d || {});
+  d = d || {};
+  const sid = String(d.sid || '').slice(0, 40);
+  /* kopan oyuncuyu aynı oturumla geri bağla (kopya oyuncu açmadan) */
+  let p = sid ? R.players.find((x) => x.sid === sid && !x.ws) : null;
+  if (p) {
+    p.ws = ws;
+    if (d.name) p.name = String(d.name).slice(0, 16);
+    if (d.country) p.country = String(d.country).slice(0, 20);
+    if (/^#[0-9a-f]{6}$/i.test(d.color || '')) p.color = d.color;
+  } else {
+    p = R.addPlayer(ws, d);
+  }
   if (!p) {
     ws.send(JSON.stringify({ t: 'err', text: 'Oda dolu ya da oyun başlamış.' }));
     return null;
