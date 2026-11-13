@@ -54,6 +54,25 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
 #over h2{font-size:26px;margin-bottom:6px}#over p{color:#9fb0c9;font-size:14px;margin-bottom:16px}
 #over button{margin:4px;background:#0d9488;border-color:#0d9488}
 #over button.alt{background:#2c3a52;border-color:#2a3446}
+/* ---------- oyun menüsü ---------- */
+#gm{position:fixed;inset:0;background:#000b;z-index:13;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.gmcard{width:min(460px,100%);max-height:88vh;overflow-y:auto;background:#141b26;border:1px solid #2a3446;border-radius:18px;padding:16px;display:grid;gap:10px;box-shadow:0 30px 70px -20px #000}
+.gmhead{display:flex;align-items:center;justify-content:space-between;gap:8px;font:800 13px system-ui;letter-spacing:.06em}
+.gmcode{display:flex;align-items:center;gap:10px;background:#0d1117;border:1px dashed #2a3446;border-radius:12px;padding:10px 12px;font-size:12px;color:#9fb0c9}
+.gmcode b{font:800 22px/1 ui-monospace,Consolas,monospace;letter-spacing:6px;color:#5eead4}
+.gmcode .xbtn{margin-left:auto;font-size:11px;padding:0 10px}
+.gmsec{font:800 10px system-ui;letter-spacing:.16em;text-transform:uppercase;color:#7f8ea6;margin-top:2px}
+.gmhelp{display:grid;gap:5px;font-size:12.5px;color:#cfd8e6;line-height:1.45}
+.gmp{display:grid;gap:5px}
+.gmp .pl{padding:8px 10px;font-size:13px}
+.gmbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.gmbtns button{flex:1;min-width:120px}
+.xbtn{min-height:34px;border-radius:9px;background:#1f2a3d;border:1px solid #2a3446;color:#e8ecf4;font-weight:700;font-size:13px;padding:0 8px}
+.gmbtns .alt{background:#2c3a52;border-color:#2a3446}
+.howto{margin-top:10px;background:#0d1117;border:1px solid #223;border-radius:12px;padding:10px 12px;font-size:12px;color:#9fb0c9}
+.howto summary{cursor:pointer;font-weight:700;color:#5eead4}
+.howto p{margin:8px 0 0;line-height:1.6}
+@media(max-width:560px){#gm{align-items:flex-end;padding:0}.gmcard{width:100%;max-height:86vh;border-radius:18px 18px 0 0;padding-bottom:calc(16px + env(safe-area-inset-bottom))}}
 /* ---------- sohbet ---------- */
 #zoom #chatTgl{position:relative;font-size:18px}
 #chatBadge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:9px;font:700 10px/1.4 system-ui;padding:0 5px;min-width:16px}
@@ -84,12 +103,38 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
 <div id="top"></div>
 <div id="msg"></div>
 <canvas id="mm" width="160" height="80"></canvas>
-<div id="zoom"><button id="chatTgl" title="Sohbet (Enter)">💬<i id="chatBadge" hidden>0</i></button><button id="hp">☰</button><button id="zi">+</button><button id="zo">−</button></div>
+<div id="zoom"><button id="chatTgl" title="Sohbet (Enter)">💬<i id="chatBadge" hidden>0</i></button><button id="gmTgl" title="Oyun menüsü">☰</button><button id="hp" title="İnşaat paneli">🔨</button><button id="zi">+</button><button id="zo">−</button></div>
 <div id="panel"><div id="tabs"></div><div id="items"></div></div>
 <div id="chatp">
   <div class="chathead"><b>💬 SOHBET</b><span class="cr" id="chatroom"></span><button class="mini" id="chatMute" title="Bildirim sesi">🔔</button><button class="mini" id="chatClose" title="Kapat (Esc)">✕</button></div>
   <div id="chatlog"></div>
   <div class="chatin"><input id="chattext" maxlength="160" placeholder="Mesaj yaz… (Enter)"><button id="chatsend">Gönder</button></div>
+</div>
+
+<div id="gm" hidden>
+  <div class="gmcard">
+    <div class="gmhead"><b>☰ OYUN MENÜSÜ</b><button id="gmClose" class="xbtn" title="Kapat (Esc)">✕</button></div>
+    <div class="gmcode">Oda kodu <b id="gmcode">----</b><button id="gmcopy" class="xbtn">Kopyala</button></div>
+    <div class="gmsec">Oyuncular</div>
+    <div id="gmplayers" class="gmp"></div>
+    <div class="gmsec">Kontroller</div>
+    <div class="gmhelp">
+      <div>🖥️ <b>WASD</b> veya ok tuşları — haritada gez</div>
+      <div>🖱️ Sürükle — gez • Tekerlek — yakınlaş</div>
+      <div>📱 Sürükle — gez • İki parmak — yakınlaş</div>
+      <div>⌨️ Enter — sohbet • Esc — kapat</div>
+    </div>
+    <div class="gmsec">Kamp</div>
+    <div class="gmhelp">
+      <div>🏕️ Alt paneldeki <b>Kamp</b> sekmesinden yükselt veya taşı.</div>
+      <div>Kampın yoksa <b>ücretsiz</b> yeniden kurulur.</div>
+    </div>
+    <div class="gmbtns">
+      <button id="gmRestart" hidden>🔄 Yeniden Başlat</button>
+      <button id="gmLeave" class="alt">🚪 Odadan Ayrıl</button>
+      <button id="gmResume" class="alt">▶ Devam</button>
+    </div>
+  </div>
 </div>
 
 <div id="over" hidden><div class="oc">
@@ -112,23 +157,21 @@ hr{border:0;border-top:1px solid #2a3446;margin:16px 0 4px}
       <div><label>Maks oyuncu</label><input id="rm" type="number" min="2" max="8" value="4"></div>
       <div><label>AI düşman</label><input id="ra" type="number" min="0" max="3" value="2"></div>
     </div>
-    <button id="create" class="go">Oda Aç</button>
+    <button id="create" class="go">⚔️ Oda Aç — savaş hemen başlar</button>
+    <div class="hint">Arkadaşların oda kodunla sonradan katılabilir; geldiklerinde ülkeleri otomatik kurulur.</div>
     <hr>
     <label>Oda kodu ile katıl</label>
     <div class="row"><input id="jc" maxlength="4" placeholder="Örn. K7QP"><button id="joinCode">Katıl</button></div>
     <div class="rl" id="roomList"></div>
+    <details class="howto">
+      <summary>Nasıl oynanır?</summary>
+      <p>1) Adını yaz, <b>Oda Aç</b> — savaş anında başlar.<br>
+      2) Oda kodunu paylaş; arkadaşların kodla katılır.<br>
+      3) Alt panelden asker, bina ve kamp yönet.<br>
+      4) PC'de <b>WASD</b> / ok tuşları, mobilde sürükle ile gez.</p>
+    </details>
     <div class="hint" id="lhint"></div>
-    <div id="ver" style="text-align:right;font-size:10px;color:#5b6b82;margin-top:8px">sürüm 2026-11-12e</div>
-  </div>
-
-  <div class="card" id="scrRoom" hidden>
-    <h2 id="rname">Oda</h2>
-    <div class="code" id="rcode">----</div>
-    <div id="rinfo" class="hint"></div>
-    <div class="plist" id="rplayers"></div>
-    <button id="start" class="go">Savaşı Başlat</button>
-    <button id="leave" class="go" style="background:#2c3a52;border-color:#2a3446">Odadan Ayrıl</button>
-    <p class="hint">Oda kodu ile arkadaşların katılabilir. Odayı kuran çıksa bile oda açık kalır; kodu bilen herkes girebilir.</p>
+    <div id="ver" style="text-align:right;font-size:10px;color:#5b6b82;margin-top:8px">sürüm 2026-11-13a</div>
   </div>
 
   <div class="card" id="scrConn" hidden>
@@ -253,6 +296,9 @@ const SID = (() => {
   } catch (e) { return 's' + Math.random().toString(36).slice(2, 10); }
 })();
 const cam = { x: W * T / 2, y: H * T / 2.1, z: 1.15 };
+const keys = new Set();
+const KEYMAP = { w: 'up', arrowup: 'up', s: 'down', arrowdown: 'down', a: 'left', arrowleft: 'left', d: 'right', arrowright: 'right' };
+const clearKeys = () => keys.clear();
 const teamMeta = new Map(); /* team -> {col, name, lv} */
 
 const teamColor = (team) => {
@@ -273,9 +319,10 @@ function conn() {
   ws.onopen = () => {
     retryT = 0;
     if (curRoom) {
+      $('lobby').hidden = false;
+      $('lobby').style.display = '';
       $('scrConn').hidden = false;
       $('scrMenu').hidden = true;
-      $('scrRoom').hidden = true;
       $('connText').textContent = 'Oyuna yeniden bağlanılıyor…';
       const d = profile();
       send({ t: 'join', code: curRoom, name: d.name, country: d.country, color: d.color, sid: SID });
@@ -286,8 +333,9 @@ function conn() {
     }
   };
   ws.onclose = () => {
+    $('lobby').hidden = false;
+    $('lobby').style.display = '';
     $('scrMenu').hidden = true;
-    $('scrRoom').hidden = true;
     $('scrConn').hidden = false;
     $('connText').textContent = curRoom ? 'Bağlantı koptu, oyuna yeniden bağlanılıyor…' : 'Sunucu bağlantısı koptu, yeniden deniyorum…';
     scheduleReconnect();
@@ -426,6 +474,7 @@ function setChat(on, focus) {
   $('chatp').classList.toggle('open', chatOn);
   $('chatTgl').classList.toggle('on', chatOn);
   if (chatOn) {
+    clearKeys();
     chatUnread = 0; paintBadge();
     const log = $('chatlog'); log.scrollTop = log.scrollHeight;
     if (focus) setTimeout(() => $('chattext').focus(), 30);
@@ -471,35 +520,26 @@ function handle(m) {
       nodes = new Map((m.nodes || []).map((n) => [n[0], { id: n[0], x: n[1], y: n[2], t: n[3] }]));
       enterGame();
     } else {
-      showLobby('room');
-      renderRoom();
+      $('lobby').hidden = false;
+      $('lobby').style.display = '';
+      $('scrMenu').hidden = true;
+      $('scrConn').hidden = false;
+      $('connText').textContent = 'Savaş hazırlanıyor…';
     }
     return;
   }
 
   if (m.t === 'room') {
     roomInfo = m.room;
-    renderRoom();
-    if (!roomInfo.started && started) {
-      started = false; S = null; me = null; mode = null; overSeen = false;
-      $('over').hidden = true;
-      $('panel').style.display = 'none';
-      $('mm').style.display = 'none';
-      $('zoom').style.display = 'none';
-      $('top').innerHTML = '';
-      nodes.clear(); rend.clear();
-      setChat(false);
-      showLobby('room'); renderRoom();
-      flash('Oyun sıfırlandı — yeniden başlatabilirsin', true);
-    }
+    if (gmOpen()) paintMenu();
     return;
   }
 
-  if (m.t === 'start') { started = true; enterGame(); return; }
+  if (m.t === 'start') { started = true; overSeen = false; mode = null; return; }
 
   if (m.t === 's') {
-    const first = !started;
-    if (first) started = true;
+    const first = !S;
+    started = true;
     applySnap(m);
     if (first) enterGame();
     return;
@@ -529,7 +569,8 @@ function handle(m) {
 
   if (m.t === 'left') {
     curRoom = null;
-    roomInfo = null; started = false; S = null; me = null;
+    roomInfo = null; started = false; S = null; me = null; mode = null;
+    clearKeys(); setMenu(false);
     nodes.clear(); rend.clear();
     chatLoad(null); setChat(false);
     $('over').hidden = true;
@@ -541,17 +582,6 @@ function handle(m) {
     return;
   }
 
-  if (m.t === 'reset') {
-    started = false; S = null; mode = null; overSeen = false;
-    $('over').hidden = true;
-    $('panel').style.display = 'none';
-    $('mm').style.display = 'none';
-    $('zoom').style.display = 'none';
-    $('top').innerHTML = '';
-    nodes.clear(); rend.clear();
-    showLobby('room');
-    return;
-  }
 }
 
 /* ---------- lobi ---------- */
@@ -559,9 +589,7 @@ function showLobby(which) {
   $('lobby').style.display = '';
   $('lobby').hidden = false;
   $('scrMenu').hidden = which !== 'menu';
-  $('scrRoom').hidden = which !== 'room';
   $('scrConn').hidden = which !== 'conn';
-  if (which === 'room') renderRoom();
 }
 
 function renderRooms(list) {
@@ -577,24 +605,11 @@ function renderRooms(list) {
   }
 }
 
-function renderRoom() {
-  if (!roomInfo) return;
-  $('rname').textContent = roomInfo.name;
-  $('rcode').textContent = roomInfo.code;
-  $('rinfo').textContent = 'Maks ' + roomInfo.max + ' oyuncu • ' + roomInfo.ai + ' AI düşman • ' + (roomInfo.started ? 'oyun sürüyor' : 'başlamayı bekliyor');
-  const box = $('rplayers');
-  box.innerHTML = '';
-  for (const p of roomInfo.players) {
-    const d = document.createElement('div');
-    d.className = 'pl';
-    d.innerHTML = '<i style="background:' + p.col + '"></i>' + p.c + ' <small>' + (p.n || '') + (p.on ? '' : ' • çevrimdışı') + '</small>';
-    box.appendChild(d);
-  }
-  $('start').style.display = roomInfo.started ? 'none' : '';
-}
-
 /* ---------- oyuna geç ---------- */
 function enterGame() {
+  if (!S || !me) return;
+  clearKeys();
+  $('gm').hidden = true;
   $('lobby').hidden = true;
   $('lobby').style.display = 'none';
   $('over').hidden = true;
@@ -607,6 +622,31 @@ function enterGame() {
   tabs();
   draw();
   if (window.innerWidth >= 900 && !chatOn) setChat(true);
+}
+
+/* ---------- oyun menüsü ---------- */
+function gmOpen() { return !$('gm').hidden; }
+function paintMenu() {
+  $('gmcode').textContent = roomInfo ? roomInfo.code : '----';
+  const box = $('gmplayers');
+  box.innerHTML = '';
+  if (roomInfo) for (const p of roomInfo.players) {
+    const d = document.createElement('div');
+    d.className = 'pl';
+    d.innerHTML = '<i style="background:' + p.col + '"></i>' + p.c + ' <small>' + (p.n || '') + (p.on ? '' : ' • çevrimdışı') + '</small>';
+    box.appendChild(d);
+  }
+  $('gmRestart').hidden = !(S && S.over);
+}
+function setMenu(on) {
+  if (on) {
+    clearKeys();
+    paintMenu();
+    $('gm').hidden = false;
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  } else {
+    $('gm').hidden = true;
+  }
 }
 
 /* ---------- anlık görüntü ---------- */
@@ -861,6 +901,18 @@ let lastT = performance.now();
     r.x += (r.tx - r.x) * Math.min(1, dt * 12);
     r.y += (r.ty - r.y) * Math.min(1, dt * 12);
   }
+  if (started && keys.size && !gmOpen()) {
+    let dx = 0, dy = 0;
+    if (keys.has('left')) dx--;
+    if (keys.has('right')) dx++;
+    if (keys.has('up')) dy--;
+    if (keys.has('down')) dy++;
+    if (dx || dy) {
+      const sp = 640 * dt / cam.z, l = Math.hypot(dx, dy);
+      cam.x = Math.max(0, Math.min(W * T, cam.x + dx / l * sp));
+      cam.y = Math.max(0, Math.min(H * T, cam.y + dy / l * sp));
+    }
+  }
   draw();
   requestAnimationFrame(loop);
 })(lastT);
@@ -1028,6 +1080,36 @@ $('hp').onclick = () => { const p = $('panel'); p.style.display = p.style.displa
 $('zi').onclick = () => cam.z = Math.min(3, cam.z * 1.3);
 $('zo').onclick = () => cam.z = Math.max(.4, cam.z / 1.3);
 
+/* ---------- menü + kamera olayları ---------- */
+$('gmTgl').onclick = () => setMenu(true);
+$('gmClose').onclick = () => setMenu(false);
+$('gmResume').onclick = () => setMenu(false);
+$('gmLeave').onclick = () => { setMenu(false); send({ t: 'leave' }); };
+$('gmRestart').onclick = () => { setMenu(false); if (cmd({ a: 'restart' })) $('over').hidden = true; };
+$('gmcopy').onclick = () => {
+  const c = roomInfo ? roomInfo.code : '';
+  if (!c) return;
+  const ok = () => flash('Oda kodu kopyalandı: ' + c, false);
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(c).then(ok, () => flash('Kod: ' + c, false));
+  else flash('Kod: ' + c, false);
+};
+$('gm').onclick = (e) => { if (e.target === $('gm')) setMenu(false); };
+
+addEventListener('keydown', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (gmOpen()) return;
+  const k = KEYMAP[e.key.toLowerCase()];
+  if (!k) return;
+  keys.add(k);
+  e.preventDefault();
+});
+addEventListener('keyup', (e) => {
+  const k = KEYMAP[e.key.toLowerCase()];
+  if (k) keys.delete(k);
+});
+addEventListener('blur', clearKeys);
+
 /* ---------- sohbet olayları ---------- */
 $('chatTgl').onclick = () => setChat(!chatOn, true);
 $('chatClose').onclick = () => setChat(false);
@@ -1046,9 +1128,10 @@ $('chattext').addEventListener('keydown', (e) => {
 addEventListener('keydown', (e) => {
   const tag = (e.target && e.target.tagName) || '';
   if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-  if (e.key === 'Enter' && started) { e.preventDefault(); setChat(true, true); }
+  if (e.key === 'Enter' && started && !gmOpen()) { e.preventDefault(); setChat(true, true); }
   else if (e.key === 'Escape') {
-    if (chatOn) setChat(false);
+    if (gmOpen()) setMenu(false);
+    else if (chatOn) setChat(false);
     if (mode) { disarmPlace(); tabs(); }
   }
 });
@@ -1074,7 +1157,7 @@ function profile() {
 
 function joinRoom(code) {
   const d = profile();
-  send({ t: 'join', code, name: d.name, country: d.country, color: d.color });
+  send({ t: 'join', code, name: d.name, country: d.country, color: d.color, sid: SID });
 }
 
 $('create').onclick = () => {
@@ -1082,7 +1165,7 @@ $('create').onclick = () => {
   const max = parseInt($('rm').value, 10) || 4;
   const ai = parseInt($('ra').value, 10) || 0;
   if (ws && ws.readyState === 1) {
-    send({ t: 'create', rname: $('rn').value.trim() || (d.name + ' odası'), max, ai, name: d.name, country: d.country, color: d.color });
+    send({ t: 'create', rname: $('rn').value.trim() || (d.name + ' odası'), max, ai, name: d.name, country: d.country, color: d.color, sid: SID });
   } else lerr('Sunucuya bağlı değil.');
 };
 
@@ -1092,8 +1175,6 @@ $('joinCode').onclick = () => {
   joinRoom(code);
 };
 
-$('start').onclick = () => send({ t: 'start' });
-$('leave').onclick = () => send({ t: 'leave' });
 $('ovRestart').onclick = () => { cmd({ a: 'restart' }); $('over').hidden = true; };
 $('ovWatch').onclick = () => { $('over').hidden = true; };
 $('reload').onclick = () => location.reload();
